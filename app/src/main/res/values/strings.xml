@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">lolop</string>
+    <string name="app_name">LoL OP</string>
+    <string name="welcome_back">Content de vous revoir ! Dernier champion : %s</string>
+    <string name="error_loading">Erreur lors du chargement des champions</string>
+    <string name="random_pick">Champion aléatoire : %s</string>
+    <string name="history_title">Histoire</string>
+    <string name="spells_title">Compétences</string>
+    <string name="build_title">Build Populaire S14</string>
+    <string name="mana_low_title">Mana Faible !</string>
+    <string name="mana_low_desc">Invocateur, votre batterie est basse. Finissez vite votre recherche !</string>
 </resources>

@@ -1,19 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/lol_blue_deep"
     tools:context=".MainActivity">
 
-    <TextView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <!-- View to force height so Logo and Toolbar fit without overlapping -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="380dp" />
+
+            <!-- Barre Sticky (Positioned at bottom, pinned) -->
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/stickyToolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:contentInsetStart="0dp"
+                app:layout_collapseMode="pin">
+
+                <LinearLayout
+                    android:id="@+id/searchContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/lol_blue_deep"
+                    android:orientation="vertical"
+                    android:paddingTop="130dp"
+                    android:paddingBottom="8dp">
+
+                    <EditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginEnd="24dp"
+                        android:background="@drawable/search_bar_background"
+                        android:hint="Rechercher un champion..."
+                        android:padding="12dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/lol_silver"
+                        android:textSize="14sp" />
+
+                    <HorizontalScrollView
+                        android:id="@+id/roleFilterContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fillViewport="true"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="12dp"
+                            android:orientation="horizontal"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp">
+
+                            <ImageView
+                                android:id="@+id/ivRoleTop"
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/role_border"
+                                android:padding="9dp"
+                                android:src="@drawable/role_top" />
+
+                            <ImageView
+                                android:id="@+id/ivRoleJungle"
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/role_border"
+                                android:padding="9dp"
+                                android:src="@drawable/role_jungle" />
+
+                            <ImageView
+                                android:id="@+id/ivRoleMid"
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/role_border"
+                                android:padding="9dp"
+                                android:src="@drawable/role_mid" />
+
+                            <ImageView
+                                android:id="@+id/ivRoleBot"
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/role_border"
+                                android:padding="9dp"
+                                android:src="@drawable/role_bot" />
+
+                            <ImageView
+                                android:id="@+id/ivRoleSupport"
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/role_border"
+                                android:padding="9dp"
+                                android:src="@drawable/role_support" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </androidx.appcompat.widget.Toolbar>
+
+            <!-- Logo -->
+            <ImageView
+                android:id="@+id/ivLogoLarge"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_gravity="top|center_horizontal"
+                android:paddingTop="60dp"
+                android:paddingBottom="-80dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/logo"
+                app:layout_collapseMode="pin" />
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChampions"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="80dp"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="100dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/lol_blue_dark"
+        app:itemIconTint="@color/lol_gold"
+        app:itemTextColor="@color/lol_gold"
+        app:menu="@menu/bottom_nav_menu" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

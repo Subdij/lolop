@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- LoL Inspired Colors -->
+    <color name="lol_gold">#C8AA6E</color>
+    <color name="lol_gold_bright">#F0E6D2</color>
+    <color name="lol_blue">#005A82</color>
+    <color name="lol_blue_dark">#091428</color>
+    <color name="lol_blue_deep">#010A13</color>
+    <color name="lol_grey">#1E2328</color>
+    <color name="lol_silver">#A09B8C</color>
 </resources>
