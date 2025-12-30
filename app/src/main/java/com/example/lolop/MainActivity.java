@@ -1,6 +1,5 @@
 package com.example.lolop;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,7 +18,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements ChampionAdapter.OnChampionClickListener {
+public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private ChampionAdapter adapter;
@@ -116,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements ChampionAdapter.O
     }
 
     private void setupRecyclerView() {
-        adapter = new ChampionAdapter(currentVersion, this);
+        adapter = new ChampionAdapter(currentVersion);
         adapter.setDatabase(db);
         binding.rvChampions.setLayoutManager(new GridLayoutManager(this, 3));
         binding.rvChampions.setAdapter(adapter);
@@ -157,13 +156,7 @@ public class MainActivity extends AppCompatActivity implements ChampionAdapter.O
         adapter.setChampions(sortedList);
     }
 
-    @Override
-    public void onChampionClick(Champion champion) {
-        Intent intent = new Intent(this, ChampionDetailActivity.class);
-        intent.putExtra("CHAMPION_ID", champion.getId());
-        intent.putExtra("VERSION", currentVersion);
-        startActivity(intent);
-    }
+
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {

@@ -1,5 +1,6 @@
 package com.example.lolop.adapter;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,19 +18,13 @@ import java.util.List;
 public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHolder> {
     private List<Champion> champions = new ArrayList<>();
     private List<Champion> championsFull = new ArrayList<>();
-    private final OnChampionClickListener listener;
     private final String version;
     private FavoriteDatabase db;
     private String currentSearchText = "";
     private String currentRoleFilter = "All";
 
-    public interface OnChampionClickListener {
-        void onChampionClick(Champion champion);
-    }
-
-    public ChampionAdapter(String version, OnChampionClickListener listener) {
+    public ChampionAdapter(String version) {
         this.version = version;
-        this.listener = listener;
     }
 
     public void setDatabase(FavoriteDatabase db) {
@@ -52,6 +47,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         applyFilters();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void applyFilters() {
         List<Champion> filteredList = new ArrayList<>();
         for (Champion item : championsFull) {
@@ -93,8 +89,6 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         } else {
             holder.binding.ivFavoriteStar.setVisibility(View.GONE);
         }
-
-        holder.itemView.setOnClickListener(v -> listener.onChampionClick(champion));
     }
 
     @Override
@@ -102,9 +96,9 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         return champions.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        ItemChampionBinding binding;
-        ViewHolder(ItemChampionBinding binding) {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public final ItemChampionBinding binding;
+        public ViewHolder(ItemChampionBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
