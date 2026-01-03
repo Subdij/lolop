@@ -1,6 +1,8 @@
 package com.example.lolop.adapter;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.lolop.DetailChampion;
 import com.example.lolop.database.FavoriteDatabase;
 import com.example.lolop.databinding.ItemChampionBinding;
 import com.example.lolop.model.Champion;
@@ -22,6 +25,16 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
     private FavoriteDatabase db;
     private String currentSearchText = "";
     private String currentRoleFilter = "All";
+    private OnChampionClickListener onChampionClickListener;
+
+    public interface OnChampionClickListener {
+        void onChampionClick(Champion champion);
+    }
+
+    public void setOnChampionClickListener(OnChampionClickListener listener) {
+        this.onChampionClickListener = listener;
+    }
+
 
     public ChampionAdapter(String version) {
         this.version = version;
@@ -52,11 +65,10 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         List<Champion> filteredList = new ArrayList<>();
         for (Champion item : championsFull) {
             boolean matchesSearch = item.getName().toLowerCase().contains(currentSearchText);
-            
-            // UTILISATION DU MAPPAGE MANUEL
-            boolean matchesRole = currentRoleFilter.equals("All") || 
+
+            boolean matchesRole = currentRoleFilter.equals("All") ||
                                  ChampionMapper.isChampionInRole(item.getId(), currentRoleFilter);
-            
+
             if (matchesSearch && matchesRole) {
                 filteredList.add(item);
             }
@@ -78,7 +90,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         holder.binding.tvChampionNameDisplay.setText(champion.getName());
 
         String iconUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/champion/" + champion.getImage().getFull();
-        
+
         Glide.with(holder.itemView.getContext())
                 .load(iconUrl)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -89,6 +101,12 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         } else {
             holder.binding.ivFavoriteStar.setVisibility(View.GONE);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (onChampionClickListener != null) {
+                onChampionClickListener.onChampionClick(champion);
+            }
+        });
     }
 
     @Override
@@ -96,7 +114,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         return champions.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         public final ItemChampionBinding binding;
         public ViewHolder(ItemChampionBinding binding) {
             super(binding.getRoot());

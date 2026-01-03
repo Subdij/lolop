@@ -1,5 +1,6 @@
 package com.example.lolop;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,7 +19,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ChampionAdapter.OnChampionClickListener {
 
     private ActivityMainBinding binding;
     private ChampionAdapter adapter;
@@ -40,17 +41,7 @@ public class MainActivity extends AppCompatActivity {
         setupRoleIcons();
         setupStickyAnimation();
 
-        if (savedInstanceState != null) {
-            //noinspection unchecked
-            championList = (ArrayList<Champion>) savedInstanceState.getSerializable("CHAMP_LIST");
-            if (championList != null && !championList.isEmpty()) {
-                sortAndDisplayChampions();
-            } else {
-                fetchChampions();
-            }
-        } else {
-            fetchChampions();
-        }
+        fetchChampions();
     }
 
     private void setupStickyAnimation() {
@@ -60,22 +51,18 @@ public class MainActivity extends AppCompatActivity {
 
             float percentage = (float) Math.abs(verticalOffset) / totalScrollRange;
 
-            // Définir le pivot en haut au centre pour que le logo rétrécisse vers le haut
             binding.ivLogoLarge.setPivotY(0f);
             binding.ivLogoLarge.setPivotX(binding.ivLogoLarge.getWidth() / 2f);
 
-            // On réduit le logo jusqu'à 40% de sa taille originale (augmenté de 30% à 40%)
             float minScale = 0.5f;
             float scale = 1.0f - (percentage * (1.0f - minScale));
-            
+
             binding.ivLogoLarge.setScaleX(scale);
             binding.ivLogoLarge.setScaleY(scale);
-            
-            // Applique un décalage vertical progressif de 0dp à 20dp
+
             float maxTranslationY = 10 * getResources().getDisplayMetrics().density;
             binding.ivLogoLarge.setTranslationY(percentage * maxTranslationY);
 
-            // Le logo reste visible et sticky grâce au mode 'pin' dans le XML
             binding.ivLogoLarge.setAlpha(1.0f);
         });
     }
@@ -117,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         adapter = new ChampionAdapter(currentVersion);
         adapter.setDatabase(db);
+        adapter.setOnChampionClickListener(this);
         binding.rvChampions.setLayoutManager(new GridLayoutManager(this, 3));
         binding.rvChampions.setAdapter(adapter);
     }
@@ -156,11 +144,10 @@ public class MainActivity extends AppCompatActivity {
         adapter.setChampions(sortedList);
     }
 
-
-
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putSerializable("CHAMP_LIST", championList);
+    public void onChampionClick(Champion champion) {
+        Intent intent = new Intent(this, DetailChampion.class);
+        intent.putExtra(DetailChampion.EXTRA_CHAMPION, champion);
+        startActivity(intent);
     }
 }
