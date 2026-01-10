@@ -14,6 +14,8 @@ import com.example.lolop.databinding.ActivityMainBinding;
 import com.example.lolop.model.Champion;
 import com.example.lolop.model.ChampionListResponse;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -23,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private ChampionAdapter adapter;
     private ArrayList<Champion> championList = new ArrayList<>();
-    private final String currentVersion = "14.5.1";
+    private String currentVersion = "14.5.1"; // Default fallback
     private FavoriteDatabase db;
     private String currentRoleFilter = "All";
     private View currentSelectedView = null;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         db = new FavoriteDatabase(this);
+        setupNavigation();
         setupRecyclerView();
         setupSearch();
         setupRoleIcons();
@@ -46,11 +49,33 @@ public class MainActivity extends AppCompatActivity {
             if (championList != null && !championList.isEmpty()) {
                 sortAndDisplayChampions();
             } else {
-                fetchChampions();
+                fetchLatestVersion(); 
             }
         } else {
-            fetchChampions();
+            fetchLatestVersion();
         }
+    }
+
+    private void fetchLatestVersion() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        RetrofitClient.getApiService().getVersions().enqueue(new Callback<List<String>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<String>> call, @NonNull Response<List<String>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    currentVersion = response.body().get(0);
+                    if (adapter != null) {
+                        adapter.setVersion(currentVersion);
+                    }
+                }
+                fetchChampions();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<String>> call, @NonNull Throwable t) {
+                // If version fetch fails, try to fetch champions with default fallback version
+                fetchChampions(); 
+            }
+        });
     }
 
     private void setupStickyAnimation() {
@@ -123,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchChampions() {
         binding.progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().getChampions(currentVersion).enqueue(new Callback<>() {
+        RetrofitClient.getApiService().getChampions(currentVersion).enqueue(new Callback<ChampionListResponse>() {
             @Override
             public void onResponse(@NonNull Call<ChampionListResponse> call, @NonNull Response<ChampionListResponse> response) {
                 binding.progressBar.setVisibility(View.GONE);
@@ -148,8 +173,8 @@ public class MainActivity extends AppCompatActivity {
             if (db.isFavorite(champion.getId())) favorites.add(champion);
             else others.add(champion);
         }
-        favorites.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
-        others.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+        Collections.sort(favorites, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+        Collections.sort(others, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
         ArrayList<Champion> sortedList = new ArrayList<>();
         sortedList.addAll(favorites);
         sortedList.addAll(others);
@@ -162,5 +187,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable("CHAMP_LIST", championList);
+    }
+
+    private void setupNavigation() {
+        binding.bottomNavigation.setSelectedItemId(R.id.nav_champions);
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.nav_champions) {
+                return true;
+            } else if (item.getItemId() == R.id.nav_items) {
+                startActivity(new android.content.Intent(MainActivity.this, ItemsActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return false;
+        });
     }
 }

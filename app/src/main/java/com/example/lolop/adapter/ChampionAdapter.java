@@ -18,12 +18,16 @@ import java.util.List;
 public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHolder> {
     private List<Champion> champions = new ArrayList<>();
     private List<Champion> championsFull = new ArrayList<>();
-    private final String version;
+    private String version;
     private FavoriteDatabase db;
     private String currentSearchText = "";
     private String currentRoleFilter = "All";
 
     public ChampionAdapter(String version) {
+        this.version = version;
+    }
+
+    public void setVersion(String version) {
         this.version = version;
     }
 

@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="4.dp">
+    android:padding="4dp">
 
     <FrameLayout
         android:layout_width="90dp"
@@ -43,7 +43,7 @@
         android:id="@+id/tvChampionNameDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4.dp"
+        android:layout_marginTop="4dp"
         android:textColor="@color/lol_gold_bright"
         android:textSize="12sp"
         android:textStyle="bold" />

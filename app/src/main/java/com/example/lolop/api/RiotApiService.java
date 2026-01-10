@@ -2,6 +2,7 @@ package com.example.lolop.api;
 
 import com.example.lolop.model.ChampionListResponse;
 import com.example.lolop.model.ItemResponse;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -15,4 +16,10 @@ public interface RiotApiService {
 
     @GET("cdn/{version}/data/fr_FR/item.json")
     Call<ItemResponse> getItems(@Path("version") String version);
+
+    @GET("cdn/{version}/data/{language}/item.json")
+    Call<ItemResponse> getItemsByLanguage(@Path("version") String version, @Path("language") String language);
+
+    @GET("api/versions.json")
+    Call<List<String>> getVersions();
 }
