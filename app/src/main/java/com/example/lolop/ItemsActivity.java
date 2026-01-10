@@ -7,11 +7,18 @@ import android.text.TextWatcher;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.lolop.adapter.ItemAdapter;
+import com.example.lolop.adapter.CategoryAdapter;
+import com.example.lolop.adapter.OverlayItemAdapter;
 import com.example.lolop.api.RetrofitClient;
 import com.example.lolop.databinding.ActivityItemsBinding;
 import com.example.lolop.model.Item;
 import com.example.lolop.model.ItemResponse;
+import androidx.recyclerview.widget.GridLayoutManager;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.widget.ImageView;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.activity.OnBackPressedCallback;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,9 +35,10 @@ import retrofit2.Response;
 public class ItemsActivity extends AppCompatActivity {
 
     private ActivityItemsBinding binding;
-    private ItemAdapter itemAdapter;
+    private CategoryAdapter categoryAdapter;
     private final Map<String, String> englishItemNames = new HashMap<>();
     private static final Map<String, String> TAG_TRANSLATIONS = new HashMap<>();
+    private final Map<String, Item> representativeItems = new HashMap<>(); // Store stable representative item for each category
     
     private String currentVersion = "14.5.1"; // Default fallback
     private List<String> listDataHeader = new ArrayList<>();
@@ -59,7 +66,7 @@ public class ItemsActivity extends AppCompatActivity {
         TAG_TRANSLATIONS.put("Vision", "Vision");
         TAG_TRANSLATIONS.put("Active", "Actif");
         TAG_TRANSLATIONS.put("Movement", "Déplacement");
-        TAG_TRANSLATIONS.put("SpellVamp", "Sort Vampirique");
+        TAG_TRANSLATIONS.put("SpellVamp", "Omnivampirisme"); // Updated to Omnivampirisme as per user context usually
         TAG_TRANSLATIONS.put("Stealth", "Furtivité");
         TAG_TRANSLATIONS.put("NonbootsMovement", "Vitesse (Hors Bottes)"); 
         TAG_TRANSLATIONS.put("Aura", "Aura"); 
@@ -73,22 +80,137 @@ public class ItemsActivity extends AppCompatActivity {
         TAG_TRANSLATIONS.put("Lane", "Voie");
     }
 
+    private static final Map<String, String> CATEGORY_ALIASES = new HashMap<>();
+    static {
+        CATEGORY_ALIASES.put("on hit", "À l'impact");
+        CATEGORY_ALIASES.put("on-hit", "À l'impact");
+        CATEGORY_ALIASES.put("ad", "Dégâts Physiques");
+        CATEGORY_ALIASES.put("attack damage", "Dégâts Physiques");
+        CATEGORY_ALIASES.put("ap", "Puissance");
+        CATEGORY_ALIASES.put("ability power", "Puissance");
+        CATEGORY_ALIASES.put("mr", "Résistance Magique");
+        CATEGORY_ALIASES.put("magic resist", "Résistance Magique");
+        CATEGORY_ALIASES.put("magic resistance", "Résistance Magique");
+        CATEGORY_ALIASES.put("cdr", "Accélération de Compétence");
+        CATEGORY_ALIASES.put("cooldown reduction", "Accélération de Compétence");
+        CATEGORY_ALIASES.put("ah", "Accélération de Compétence");
+        CATEGORY_ALIASES.put("ability haste", "Accélération de Compétence");
+        CATEGORY_ALIASES.put("speed", "Déplacement");
+        CATEGORY_ALIASES.put("move speed", "Déplacement");
+        CATEGORY_ALIASES.put("movement speed", "Déplacement");
+        CATEGORY_ALIASES.put("ms", "Déplacement");
+        CATEGORY_ALIASES.put("vamp", "Omnivampirisme");
+        CATEGORY_ALIASES.put("omnivamp", "Omnivampirisme");
+        CATEGORY_ALIASES.put("lifesteal", "Vol de Vie");
+        CATEGORY_ALIASES.put("life steal", "Vol de Vie");
+        CATEGORY_ALIASES.put("crit", "Coup Critique");
+        CATEGORY_ALIASES.put("critical strike", "Coup Critique");
+        CATEGORY_ALIASES.put("as", "Vitesse d'Attaque");
+        CATEGORY_ALIASES.put("attack speed", "Vitesse d'Attaque");
+        CATEGORY_ALIASES.put("lethality", "Létalité");
+        CATEGORY_ALIASES.put("gw", "Anti-soin");
+        CATEGORY_ALIASES.put("anti heal", "Anti-soin");
+        CATEGORY_ALIASES.put("grievous wounds", "Anti-soin");
+        CATEGORY_ALIASES.put("shield reduce", "Anti-bouclier");
+        CATEGORY_ALIASES.put("anti shield", "Anti-bouclier");
+        CATEGORY_ALIASES.put("armor", "Armure");
+        CATEGORY_ALIASES.put("health", "PV");
+        CATEGORY_ALIASES.put("hp", "PV");
+        CATEGORY_ALIASES.put("mana", "Mana");
+        CATEGORY_ALIASES.put("mana regen", "Régén. Mana");
+        CATEGORY_ALIASES.put("health regen", "Régén. PV");
+        CATEGORY_ALIASES.put("hp regen", "Régén. PV");
+        CATEGORY_ALIASES.put("armor pen", "Pénétration d'Armure");
+        CATEGORY_ALIASES.put("armor penetration", "Pénétration d'Armure");
+        CATEGORY_ALIASES.put("magic pen", "Pénétration Magique");
+        CATEGORY_ALIASES.put("magic penetration", "Pénétration Magique");
+        CATEGORY_ALIASES.put("tenacity", "Ténacité");
+        CATEGORY_ALIASES.put("spellblade", "Lame enchantée");
+        CATEGORY_ALIASES.put("sheen", "Lame enchantée");
+        CATEGORY_ALIASES.put("lifeline", "Lien vital");
+        CATEGORY_ALIASES.put("shield", "Bouclier");
+        CATEGORY_ALIASES.put("slow", "Ralentissement");
+    }
+
+    private static final Map<String, String> preferredCategoryImages = new HashMap<>();
+    static {
+        preferredCategoryImages.put("Dégâts Physiques", "Épée longue");
+        preferredCategoryImages.put("Puissance", "Coiffe de Rabadon");
+        preferredCategoryImages.put("PV", "Cristal de rubis");
+        preferredCategoryImages.put("Pénétration d'Armure", "Dernier souffle");
+        preferredCategoryImages.put("Pénétration Magique", "Joyau putréfiant");
+        preferredCategoryImages.put("Vol de Vie", "Soif-de-sang");
+        preferredCategoryImages.put("Régén. PV", "Armure de Warmog");
+        preferredCategoryImages.put("Vitesse (Hors Bottes)", "Plaque de lune ailée");
+        preferredCategoryImages.put("Ténacité", "Gage de Sterak");
+        preferredCategoryImages.put("Actif", "Sablier de Zhonya");
+        preferredCategoryImages.put("Aura", "Égide solaire");
+        preferredCategoryImages.put("À l'impact", "Tueur de krakens");
+        preferredCategoryImages.put("Jungle", "Bébé Ixamandre"); // Assuming name match
+        preferredCategoryImages.put("Omnivampirisme", "Créateur de failles");
+        preferredCategoryImages.put("Anti-soin", "Morellonomicon");
+        preferredCategoryImages.put("Anti-bouclier", "Crochet de serpent");
+        preferredCategoryImages.put("Létalité", "Dague dentelée");
+        preferredCategoryImages.put("Lame enchantée", "Brillance");
+        preferredCategoryImages.put("Lien vital", "Arc-bouclier immortel");
+        preferredCategoryImages.put("Bouclier", "Médaillon de l'Iron Solari");
+    }
+
+    private static final Map<String, String> categoryDescriptions = new HashMap<>();
+    static {
+        categoryDescriptions.put("Dégâts Physiques", "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
+        categoryDescriptions.put("Puissance", "Augmente les dégâts de vos compétences magiques.");
+        categoryDescriptions.put("PV", "Augmente votre santé maximale pour subir plus de dégâts.");
+        categoryDescriptions.put("Armure", "Réduit les dégâts physiques subis.");
+        categoryDescriptions.put("Résistance Magique", "Réduit les dégâts magiques subis.");
+        categoryDescriptions.put("Vitesse d'Attaque", "Augmente la fréquence de vos attaques de base.");
+        categoryDescriptions.put("Accélération de Compétence", "Réduit le temps de récupération de vos compétences.");
+        categoryDescriptions.put("Coup Critique", "Augmente la chance que vos attaques infligent des dégâts doublés.");
+        categoryDescriptions.put("Mana", "Réserve d'énergie pour lancer des sorts.");
+        categoryDescriptions.put("Régén. Mana", "Vitesse à laquelle votre mana se recharge.");
+        categoryDescriptions.put("Régén. PV", "Vitesse à laquelle vos PV remontent hors combat.");
+        categoryDescriptions.put("Vol de Vie", "Vous soigne d'un pourcentage des dégâts physiques infligés par vos attaques.");
+        categoryDescriptions.put("Omnivampirisme", "Vous soigne d'un pourcentage de TOUS les dégâts infligés (sorts inclus).");
+        categoryDescriptions.put("Létalité", "Ignore une quantité fixe d'armure. Très efficace contre les cibles fragiles.");
+        categoryDescriptions.put("Pénétration d'Armure", "Ignore un pourcentage d'armure. Efficace contre les tanks.");
+        categoryDescriptions.put("Pénétration Magique", "Ignore de la résistance magique. Indispensable contre les tanks.");
+        categoryDescriptions.put("Déplacement", "Augmente votre vitesse de déplacement.");
+        categoryDescriptions.put("Vitesse (Hors Bottes)", "Objets de déplacement autres que les bottes.");
+        categoryDescriptions.put("Consommable", "Objets à usage unique (potions, balises).");
+        categoryDescriptions.put("Relique", "Objets de vision gratuits (Totem, Brouilleur).");
+        categoryDescriptions.put("Ténacité", "Réduit la durée des contrôles de foule (étourdissements, etc.).");
+        categoryDescriptions.put("Actif", "Objets possédant une compétence activable manuellement.");
+        categoryDescriptions.put("Aura", "Objets conférant un bonus passif aux alliés proches.");
+        categoryDescriptions.put("À l'impact", "Effets supplémentaires appliqués à chaque attaque de base.");
+        categoryDescriptions.put("Ralentissement", "Objets capables de ralentir les ennemis.");
+        categoryDescriptions.put("Revenus", "Dédiés aux supports pour gagner de l'or sans tuer de sbires.");
+        categoryDescriptions.put("Vision", "Tout ce qui concerne la pose ou destruction de balises.");
+        categoryDescriptions.put("Jungle", "Objets de départ pour les junglers.");
+        categoryDescriptions.put("Voie", "Objets de départ pour les laners (Doran, Bouclier...).");
+        
+        categoryDescriptions.put("Anti-soin", "Applique 'Hémorragie' pour réduire les soins reçus par les ennemis.");
+        categoryDescriptions.put("Anti-bouclier", "Réduit l'efficacité des boucliers ennemis.");
+        categoryDescriptions.put("Lame enchantée", "Renforce la prochaine attaque après avoir lancé un sort (Effet Brillance).");
+        categoryDescriptions.put("Lien vital", "Déclenche un bouclier de survie quand vos PV tombent bas.");
+        categoryDescriptions.put("Bouclier", "Objets capables d'octroyer un bouclier à vous-même ou un allié.");
+        categoryDescriptions.put("Stase", "Vous rend invulnérable et incapable d'agir pendant une courte durée.");
+    }
+
     private static final List<String> CATEGORY_ORDER = Arrays.asList(
         "Bottes",
-        "Consommable",
-        "Relique",
         "Dégâts Physiques",
         "Puissance",
+        "Létalité",       // New
+        "Lame enchantée", // New
         "PV",
-        "Armure",
-        "Résistance Magique",
-        "Vitesse d'Attaque",
-        "Coup Critique",
-        "Accélération de Compétence",
+        "Bouclier",       // New
+        "Lien vital",     // New
         "Pénétration d'Armure",
         "Pénétration Magique",
         "Vol de Vie",
         "Omnivampirisme", 
+        "Anti-soin",     // New
+        "Anti-bouclier", // New
         "Mana",
         "Régén. Mana",
         "Régén. PV",
@@ -99,11 +221,11 @@ public class ItemsActivity extends AppCompatActivity {
         "Aura",
         "Ralentissement",
         "À l'impact",
-        "Furtivité",
         "Revenus",
         "Vision",
         "Jungle",
-        "Voie"
+        "Voie",
+        "Relique"
     );
 
     @Override
@@ -114,7 +236,111 @@ public class ItemsActivity extends AppCompatActivity {
 
         setupNavigation();
         setupSearch();
+        setupOverlay();
         fetchLatestVersion();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (isOverlayVisible()) {
+                    hideOverlay();
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
+    }
+
+    // Overlay Fields
+    private FrameLayout overlayContainer;
+    private View overlayBackground;
+    private ImageView btnCloseOverlay;
+    private ImageView btnInfoOverlay; // New
+    private TextView tvOverlayTitle;
+    private TextView tvOverlayDescription; // New
+    private RecyclerView rvOverlayItems;
+
+    private void setupOverlay() {
+        overlayContainer = findViewById(R.id.overlayContainer);
+        overlayBackground = findViewById(R.id.overlayBackground);
+        btnCloseOverlay = findViewById(R.id.btnCloseOverlay);
+        btnInfoOverlay = findViewById(R.id.btnInfoOverlay);
+        tvOverlayTitle = findViewById(R.id.tvOverlayTitle);
+        tvOverlayDescription = findViewById(R.id.tvOverlayDescription);
+        rvOverlayItems = findViewById(R.id.rvOverlayItems);
+
+        rvOverlayItems.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columns for items as requested
+        
+        // Disable nested scrolling for the overlay list so it doesn't propagate scroll events to the CoordinatorLayout/AppBar
+        rvOverlayItems.setNestedScrollingEnabled(false);
+
+        // Consume all touch events on the background to prevent them from passing through to the list behind
+        overlayBackground.setOnTouchListener((v, event) -> {
+            hideOverlay();
+            return true; // Consume the event
+        });
+        
+        btnCloseOverlay.setOnClickListener(v -> hideOverlay());
+        
+        // Toggle description
+        btnInfoOverlay.setOnClickListener(v -> {
+            if (tvOverlayDescription.getVisibility() == View.VISIBLE) {
+                tvOverlayDescription.setVisibility(View.GONE);
+            } else {
+                tvOverlayDescription.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void showOverlay(String category) {
+        if (overlayContainer == null) return;
+        
+        tvOverlayTitle.setText(category);
+        
+        // Set info text
+        String desc = categoryDescriptions.get(category);
+        if (desc != null) {
+            tvOverlayDescription.setText(desc);
+            btnInfoOverlay.setVisibility(View.VISIBLE);
+        } else {
+            btnInfoOverlay.setVisibility(View.GONE);
+        }
+        // Always start hidden
+        tvOverlayDescription.setVisibility(View.GONE);
+        
+        List<Item> items = listDataChild.get(category);
+        if (items != null) {
+            OverlayItemAdapter adapter = new OverlayItemAdapter(this, items, currentVersion);
+            rvOverlayItems.setAdapter(adapter);
+        } else {
+             rvOverlayItems.setAdapter(null);
+        }
+
+        overlayContainer.setVisibility(View.VISIBLE);
+        overlayContainer.setAlpha(0f);
+        overlayContainer.animate().alpha(1f).setDuration(200).start();
+        
+        // Disable scrolling on the main list
+        binding.rvCategories.setNestedScrollingEnabled(false);
+        // Also suppress layout to be extremely safe, although nestedScrollingEnabled usually suffices for Grid
+        // binding.rvCategories.suppressLayout(true);
+    }
+
+    private void hideOverlay() {
+        if (overlayContainer == null) return;
+        
+        // Re-enable scrolling on the main list
+        binding.rvCategories.setNestedScrollingEnabled(true);
+        // binding.rvCategories.suppressLayout(false);
+
+        overlayContainer.animate().alpha(0f).setDuration(200).withEndAction(() -> 
+            overlayContainer.setVisibility(View.GONE)
+        ).start();
+    }
+    
+    private boolean isOverlayVisible() {
+        return overlayContainer != null && overlayContainer.getVisibility() == View.VISIBLE;
     }
 
     private void fetchLatestVersion() {
@@ -161,11 +387,13 @@ public class ItemsActivity extends AppCompatActivity {
     }
 
     private void filterData(String query) {
+        if (categoryAdapter == null) return;
+
         if (query.isEmpty()) {
-            itemAdapter.updateData(originalDataHeader, originalDataChild);
-            for(int i=0; i < originalDataHeader.size(); i++) {
-                binding.elvItems.collapseGroup(i);
-            }
+            listDataHeader = new ArrayList<>(originalDataHeader);
+            listDataChild.clear();
+            listDataChild.putAll(originalDataChild);
+            categoryAdapter.updateData(originalDataHeader, originalDataChild);
             return;
         }
 
@@ -179,54 +407,50 @@ public class ItemsActivity extends AppCompatActivity {
             List<Item> originalItems = originalDataChild.get(header);
             List<Item> filteredItems = new ArrayList<>();
             
-            // Check French category name (header)
-            String normalizedHeader = stripAccents(header.toLowerCase());
-            boolean headerMatches = normalizedHeader.contains(normalizedQuery);
-            
-            // Check English category name mappings
+            boolean headerMatches = stripAccents(header.toLowerCase()).contains(normalizedQuery);
+
             if (!headerMatches) {
-                for (Map.Entry<String, String> entry : TAG_TRANSLATIONS.entrySet()) {
-                    // entry.getValue() == header (French)
-                    // entry.getKey() == English Tag
-                    if (entry.getValue().equals(header)) {
-                         String normalizedEnglishTag = stripAccents(entry.getKey().toLowerCase());
-                         if (normalizedEnglishTag.contains(normalizedQuery)) {
-                             headerMatches = true;
-                             break;
-                         }
+                for (Map.Entry<String, String> entry : CATEGORY_ALIASES.entrySet()) {
+                    if (entry.getKey().contains(normalizedQuery)) {
+                        if (header.equalsIgnoreCase(entry.getValue())) {
+                            headerMatches = true;
+                            break;
+                        }
                     }
                 }
             }
 
-            if (originalItems != null) {
-                if (headerMatches) {
+            if (headerMatches) {
+                // If header matches, show ALL items in this category
+                if (originalItems != null) {
                     filteredItems.addAll(originalItems);
-                } else {
-                    for (Item item : originalItems) {
-                        boolean match = false;
-                        
-                        // Check French Name
-                        if (item.getName() != null) {
-                            String normalizedItemName = stripAccents(item.getName().toLowerCase());
-                            if (normalizedItemName.contains(normalizedQuery)) {
-                                match = true;
-                            }
+                }
+            } else if (originalItems != null) {
+                // Iterate through items individually to check for matches
+                for (Item item : originalItems) {
+                    boolean match = false;
+                    
+                    // Check French Name
+                    if (item.getName() != null) {
+                        String normalizedItemName = stripAccents(item.getName().toLowerCase());
+                        if (normalizedItemName.contains(normalizedQuery)) {
+                            match = true;
                         }
-                        
-                        // Check English Name
-                        if (!match && item.getId() != null) {
-                             String enName = englishItemNames.get(item.getId());
-                             if (enName != null) {
-                                 String normalizedEnName = stripAccents(enName.toLowerCase());
-                                 if (normalizedEnName.contains(normalizedQuery)) {
-                                     match = true;
-                                 }
+                    }
+                    
+                    // Check English Name
+                    if (!match && item.getId() != null) {
+                         String enName = englishItemNames.get(item.getId());
+                         if (enName != null) {
+                             String normalizedEnName = stripAccents(enName.toLowerCase());
+                             if (normalizedEnName.contains(normalizedQuery)) {
+                                 match = true;
                              }
-                        }
+                         }
+                    }
 
-                        if (match) {
-                            filteredItems.add(item);
-                        }
+                    if (match) {
+                        filteredItems.add(item);
                     }
                 }
             }
@@ -258,14 +482,10 @@ public class ItemsActivity extends AppCompatActivity {
             filteredChild.put(toutHeader, allItems);
         }
 
-        itemAdapter.updateData(filteredHeaders, filteredChild);
-        
-        if (!filteredHeaders.isEmpty()) {
-             binding.elvItems.expandGroup(0);
-             for(int i=1; i < filteredHeaders.size(); i++) {
-                 binding.elvItems.collapseGroup(i);
-             }
-        }
+        listDataHeader = filteredHeaders;
+        listDataChild.clear();
+        listDataChild.putAll(filteredChild);
+        categoryAdapter.updateData(filteredHeaders, filteredChild);
     }
 
     private String stripAccents(String s) {
@@ -391,10 +611,56 @@ public class ItemsActivity extends AppCompatActivity {
             for (String category : uniqueCategories) {
                 addToMap(tempMap, category, item);
             }
+            
+            // Custom Logic: Anti-heal (Hémorragie)
+            // Check description for keywords
+            if (item.getDescription() != null) {
+                String lowerDesc = item.getDescription().toLowerCase();
+                // Keep Anti-heal logic
+                if (lowerDesc.contains("hémorragie") || lowerDesc.contains("grievous wounds") || lowerDesc.contains("réduit les soins")) {
+                    addToMap(tempMap, "Anti-soin", item);
+                }
+                
+                // Consolided Anti-shield Logic to prevent duplicates
+                boolean isAntiShield = false;
+                if (lowerDesc.contains("réduit les boucliers") || lowerDesc.contains("shield reave")) {
+                    isAntiShield = true;
+                } else if (item.getName() != null && item.getName().equalsIgnoreCase("Crochet de serpent")) {
+                    isAntiShield = true;
+                }
+                
+                if (isAntiShield) {
+                     addToMap(tempMap, "Anti-bouclier", item);
+                }
+
+                // Létalité
+                if (lowerDesc.contains("létalité") || lowerDesc.contains("lethality")) {
+                    addToMap(tempMap, "Létalité", item);
+                }
+
+                // Lame enchantée (Spellblade)
+                if (lowerDesc.contains("lame enchantée") || lowerDesc.contains("spellblade")) {
+                    addToMap(tempMap, "Lame enchantée", item);
+                }
+
+                // Lien vital (Lifeline)
+                if (lowerDesc.contains("lien vital") || lowerDesc.contains("lifeline")) {
+                    addToMap(tempMap, "Lien vital", item);
+                }
+
+                // Bouclier (Donne un bouclier / Shielding)
+                // Use keywords like "confère un bouclier" (grants a shield) to avoid anti-shield items
+                if (lowerDesc.contains("confère un bouclier") || lowerDesc.contains("octroie un bouclier") || lowerDesc.contains("grants a shield")) {
+                    addToMap(tempMap, "Bouclier", item);
+                }
+            }
         }
 
         // Sort headers by custom order
         listDataHeader = new ArrayList<>(tempMap.keySet());
+        // Explicitly remove "Furtivité" if it exists in the keys
+        listDataHeader.remove("Furtivité");
+
         Collections.sort(listDataHeader, (o1, o2) -> {
             int index1 = CATEGORY_ORDER.indexOf(o1);
             int index2 = CATEGORY_ORDER.indexOf(o2);
@@ -414,15 +680,59 @@ public class ItemsActivity extends AppCompatActivity {
         // Sort items within each header and populate child map
         for (String header : listDataHeader) {
             List<Item> items = tempMap.get(header);
-            // Replaced List.sort with Collections.sort for compatibility
-            Collections.sort(items, (i1, i2) -> {
-                String n1 = i1.getName();
-                String n2 = i2.getName();
-                if (n1 == null) return -1;
-                if (n2 == null) return 1;
-                return n1.compareToIgnoreCase(n2);
-            });
+            
+            if (items != null) {
+                // Sort by gold, then name
+                Collections.sort(items, (i1, i2) -> {
+                     int price1 = (i1.getGold() != null) ? i1.getGold().getTotal() : 0;
+                     int price2 = (i2.getGold() != null) ? i2.getGold().getTotal() : 0;
+                     if (price1 != price2) return Integer.compare(price1, price2);
+                     
+                     String n1 = i1.getName();
+                     String n2 = i2.getName();
+                     if (n1 == null) return -1;
+                     if (n2 == null) return 1;
+                     return n1.compareToIgnoreCase(n2);
+                });
+            }
+
             listDataChild.put(header, items);
+            
+            // Capture representative item for this header (First item)
+            // Only do this on initial load (when representativeItems is empty or we want to ensure stability)
+            // Capture representative item for this header
+            if (items != null && !items.isEmpty() && !representativeItems.containsKey(header)) {
+                Item repItem = items.get(0); // Default to first item
+                
+                // Check for preferred custom image
+                if (preferredCategoryImages.containsKey(header)) {
+                    String preferredName = preferredCategoryImages.get(header);
+                    // Search in ALL items to find the preferred one, not just this category's items 
+                    // (though it likely should be in this category, scanning global sorted set is safer if we want strict match)
+                    // For improved performance, we check items in this category first.
+                    
+                    boolean found = false;
+                    for (Item item : items) {
+                         if (item.getName() != null && item.getName().equalsIgnoreCase(preferredName)) {
+                             repItem = item;
+                             found = true;
+                             break;
+                         }
+                    }
+                    
+                    if (!found) {
+                        // Fallback: search in all sortedItems if not found in category (rare case)
+                         for (Item item : sortedItems) { // sortedItems is available in this scope
+                             if (item.getName() != null && item.getName().equalsIgnoreCase(preferredName)) {
+                                 repItem = item;
+                                 break;
+                             }
+                         }
+                    }
+                }
+                
+                representativeItems.put(header, repItem);
+            }
         }
 
         // Save original for search
@@ -430,8 +740,24 @@ public class ItemsActivity extends AppCompatActivity {
         originalDataChild = new HashMap<>(listDataChild);
 
         // Set adapter
-        itemAdapter = new ItemAdapter(this, listDataHeader, listDataChild, currentVersion);
-        binding.elvItems.setAdapter(itemAdapter);
+        categoryAdapter = new CategoryAdapter(this, listDataHeader, listDataChild, currentVersion, representativeItems, category -> {
+             showOverlay(category);
+        });
+        
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                // "Tout" takes 2 spans (full width), others take 1
+                if ("Tout".equals(categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
+                    return 2;
+                }
+                return 1;
+            }
+        });
+        
+        binding.rvCategories.setLayoutManager(layoutManager);
+        binding.rvCategories.setAdapter(categoryAdapter);
     }
 
     private void addToMap(HashMap<String, List<Item>> map, String key, Item item) {

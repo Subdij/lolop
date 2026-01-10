@@ -54,7 +54,10 @@
                         android:padding="12dp"
                         android:textColor="@color/white"
                         android:textColorHint="@color/lol_silver"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:imeOptions="actionDone" />
 
                     <HorizontalScrollView
                         android:id="@+id/roleFilterContainer"
