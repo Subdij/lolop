@@ -32,7 +32,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ItemsActivity extends AppCompatActivity {
+public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapter.OnItemClickListener, com.example.lolop.adapter.GridItemAdapter.OnItemClickListener {
 
     private ActivityItemsBinding binding;
     private CategoryAdapter categoryAdapter;
@@ -784,5 +784,320 @@ public class ItemsActivity extends AppCompatActivity {
             ),
             " "
         );
+    }
+
+    private String formatDescription(String description) {
+        if (description == null) return "";
+        
+        // 1. Structural Clean-up & Keywords
+        String s = description
+             .replaceAll("<mainText>", "")
+             .replaceAll("</mainText>", "")
+             .replaceAll("<stats>", "<br>")
+             .replaceAll("</stats>", "<br>")
+             .replaceAll("<attention>", "<font color='#FFD700'>")
+             .replaceAll("</attention>", "</font>")
+             .replaceAll("<passive>", "<font color='#FFD700'>")
+             .replaceAll("</passive>", "</font>")
+             .replaceAll("<active>", "<font color='#FFD700'>")
+             .replaceAll("</active>", "</font>")
+             .replaceAll("<status>", "<font color='#FFFFFF'>")
+             .replaceAll("</status>", "</font>")
+             .replaceAll("<keywordStealth>", "<font color='#9370DB'>")
+             .replaceAll("</keywordStealth>", "</font>")
+             .replaceAll("<rarityLegendary>", "<font color='#FFD700'>") 
+             .replaceAll("</rarityLegendary>", "</font>")
+             .replaceAll("<rarityMythic>", "<font color='#FF4500'>")
+             .replaceAll("</rarityMythic>", "</font>");
+
+        // 2. Tag Replacements (Official Riot Tags -> Icons)
+        s = s.replaceAll("<attackDamage>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
+            .replaceAll("</attackDamage>", "</font> ") 
+            .replaceAll("<abilityPower>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
+            .replaceAll("</abilityPower>", "</font> ")
+            .replaceAll("<armor>", "<img src='ic_stat_armor'/> <font color='#FFFF00'>")
+            .replaceAll("</armor>", "</font> ")
+            .replaceAll("<spellBlock>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
+            .replaceAll("</spellBlock>", "</font> ")
+            .replaceAll("<magicResistance>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
+            .replaceAll("</magicResistance>", "</font> ")
+            .replaceAll("<attackSpeed>", "<img src='ic_stat_attack_speed'/> <font color='#FFFF00'>")
+            .replaceAll("</attackSpeed>", "</font> ")
+            .replaceAll("<abilityHaste>", "<img src='ic_stat_haste'/> <font color='#FFFFFF'>")
+            .replaceAll("</abilityHaste>", "</font> ")
+            .replaceAll("<moveSpeed>", "<img src='ic_stat_move_speed'/> <font color='#FFFFFF'>")
+            .replaceAll("</moveSpeed>", "</font> ")
+            .replaceAll("<mana>", "<img src='ic_stat_mana'/> <font color='#0099CC'>")
+            .replaceAll("</mana>", "</font> ")
+            .replaceAll("<health>", "<img src='ic_stat_health'/> <font color='#4B8B3B'>")
+            .replaceAll("</health>", "</font> ")
+            .replaceAll("<crit>", "<img src='ic_stat_crit'/> <font color='#FF4500'>")
+            .replaceAll("</crit>", "</font> ")
+            .replaceAll("<lifeSteal>", "<img src='ic_stat_lifesteal'/> <font color='#FF4500'>")
+            .replaceAll("</lifeSteal>", "</font> ")
+            .replaceAll("<physicalDamage>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
+            .replaceAll("</physicalDamage>", "</font>")
+            .replaceAll("<magicDamage>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
+            .replaceAll("</magicDamage>", "</font>")
+            .replaceAll("<trueDamage>", "<font color='#FFFFFF'>") 
+            .replaceAll("</trueDamage>", "</font>")
+            .replaceAll("<healing>", "<img src='ic_stat_health'/> <font color='#00FF00'>")
+            .replaceAll("</healing>", "</font>")
+            .replaceAll("<shield>", "<img src='ic_stat_armor'/> <font color='#FFD700'>")
+            .replaceAll("</shield>", "</font>")
+            .replaceAll("<scaleHealth>", "<img src='ic_stat_health'/> <font color='#4B8B3B'>")
+            .replaceAll("</scaleHealth>", "</font>")
+            .replaceAll("<scaleMana>", "<img src='ic_stat_mana'/> <font color='#0099CC'>")
+            .replaceAll("</scaleMana>", "</font>")
+            .replaceAll("<scaleAD>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
+            .replaceAll("</scaleAD>", "</font>")
+            .replaceAll("<scaleAP>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
+            .replaceAll("</scaleAP>", "</font>")
+            .replaceAll("<scaleArmor>", "<img src='ic_stat_armor'/> <font color='#FFFF00'>")
+            .replaceAll("</scaleArmor>", "</font>")
+            .replaceAll("<scaleMR>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
+            .replaceAll("</scaleMR>", "</font>")
+            .replaceAll("<speed>", "<img src='ic_stat_move_speed'/> <font color='#FFFF00'>")
+            .replaceAll("</speed>", "</font>");
+
+        // 3. Line-by-Line Processing safely to avoid messing up BR tags
+        String[] lines = s.split("<br>");
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            
+            // Complex Stats
+            line = replaceStat(line, "régén(\\.|ération)?( de base)? des pv", "ic_stat_hp_regen");
+            line = replaceStat(line, "régén(\\.|ération)?( de base)? du mana", "ic_stat_mana_regen");
+            line = replaceStat(line, "pénétration d'armure", "ic_stat_armor_pen");
+            line = replaceStat(line, "pénétration magique", "ic_stat_magic_pen");
+            line = replaceStat(line, "efficacité de vos soins et boucliers", "ic_stat_heal_shield");
+            line = replaceStat(line, "puissance des soins et boucliers", "ic_stat_heal_shield");
+            line = replaceStat(line, "vol de vie", "ic_stat_lifesteal");
+            line = replaceStat(line, "omnivampirisme", "ic_stat_vamp");
+            line = replaceStat(line, "dégâts (des|de) coups? critiques?", "ic_stat_crit_damage");
+            line = replaceStat(line, "chances de coup critique", "ic_stat_crit");
+            line = replaceStat(line, "accélération de compétence", "ic_stat_haste");
+            line = replaceStat(line, "vitesse de déplacement", "ic_stat_move_speed");
+            line = replaceStat(line, "vitesse d'attaque", "ic_stat_attack_speed");
+            line = replaceStat(line, "létalité", "ic_stat_armor_pen");
+            line = replaceStat(line, "tenacity|ténacité", "ic_stat_tenacity");
+
+            // Simple Stats
+            line = replaceStat(line, "dégâts d'attaque", "ic_stat_ad");
+            line = replaceStat(line, "puissance", "ic_stat_ap");
+            line = replaceStat(line, "(?<!d')armure", "ic_stat_armor"); 
+            line = replaceStat(line, "résistance magique", "ic_stat_mr");
+            
+            // PV / Mana / Gold
+            line = replaceStat(line, "(?<!des )\\bPV\\b", "ic_stat_health");
+            line = replaceStat(line, "points de vie", "ic_stat_health");
+            line = replaceStat(line, "(?<!du )\\bmana\\b", "ic_stat_mana");
+            line = replaceStat(line, "\\bPO\\b", "ic_stat_gold");
+            
+            sb.append(line);
+            if (i < lines.length - 1) {
+                sb.append("<br>");
+            }
+        }
+             
+        return sb.toString();
+    }
+
+    /**
+     * Helper to replace stats with icons intelligently WITHIN A SINGLE LINE.
+     * 1. Detects if an icon is already present (Group 1 Or Group 4).
+     * 2. Captures preceding number/unit (Group 2).
+     * 3. Reconstructs as [Icon] [Number] [Stat].
+     */
+    private String replaceStat(String text, String statRegex, String iconName) {
+        // Regex Breakdown (Simplified for single line):
+        // G1 (Existing Pre-Icon): (?:(<img[^>]+>)(?:\\s*<[^>]+>)*\\s*)?
+        // G2 (Number/Unit): Looks for standard pattern "Tags Number Tags Unit", BUT specifically excludes <img...> tags 
+        //                   to ensure they are caught by G1 (Pre-Icon) instead of being consumed here.
+        // G3 (Stat Name): (STAT_REGEX)
+        // G4 (Existing Post-Icon): (?:\s*(<img[^>]+>))?
+        
+        String preIcon = "(?:(<img[^>]+>)(?:\\s*<[^>]+>)*\\s*)?";
+        // Change: Added d' and des to regex to capture preposition properly
+        String numberPart = "((?:<(?!img\\b)[^>]+>|\\s)*[-+]?\\s*\\d+(?:(?:%|\\s*%+)|(?:[.,]\\d+))?(?:<(?!img\\b)[^>]+>|\\s)*(?:d'|des\\s+|de\\s+)?)?";
+        String postIcon = "(?:\\s*(<img[^>]+>))?";
+        
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?i)" + preIcon + numberPart + "(" + statRegex + ")" + postIcon);
+        java.util.regex.Matcher m = p.matcher(text);
+        
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            boolean hasPreIcon = m.group(1) != null;
+            boolean hasPostIcon = m.group(4) != null;
+            
+            String number = m.group(2) != null ? m.group(2) : "";
+            String stat = m.group(3);
+            
+            // Always ensure the icon is at the start (Left aligned)
+            String iconTag = "<img src='" + iconName + "'/> ";
+            
+            if (hasPreIcon) {
+                // If icon exists before, verify duplication logic.
+                // Simple logic: we are rewriting the block. If we found an icon, we can just rewrite it properly.
+                // But to fix "Wrong Icon", we enforce OUR icon.
+                // Rebuild: Icon + Number + Stat
+                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(iconTag + number + stat));
+            } else if (hasPostIcon) {
+                // Found icon AFTER. Move to FRONT.
+                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(iconTag + number + stat));
+            } else {
+                // No icon. Insert it.
+                m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(iconTag + number + stat));
+            }
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+
+    // Custom Span for vertical alignment
+    private static class CenteredImageSpan extends android.text.style.ImageSpan {
+        public CenteredImageSpan(android.content.Context context, int drawableRes) {
+            super(context, drawableRes);
+        }
+
+        public CenteredImageSpan(android.graphics.drawable.Drawable d) {
+            super(d);
+        }
+        
+        @Override
+        public void draw(@androidx.annotation.NonNull android.graphics.Canvas canvas, CharSequence text,
+                         int start, int end, float x, 
+                         int top, int y, int bottom, @androidx.annotation.NonNull android.graphics.Paint paint) {
+            android.graphics.drawable.Drawable b = getDrawable();
+            android.graphics.Paint.FontMetricsInt fm = paint.getFontMetricsInt();
+            int transY = (y + fm.descent + y + fm.ascent) / 2 - b.getBounds().bottom / 2;
+            
+            canvas.save();
+            canvas.translate(x, transY);
+            b.draw(canvas);
+            canvas.restore();
+        }
+    }
+
+    @Override
+    public void onItemClick(Item item) {
+        showItemDetail(item);
+    }
+
+    private void showItemDetail(Item item) {
+        if (isFinishing()) return;
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_item_detail, null);
+        builder.setView(dialogView);
+
+        android.app.AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        // Bind Views
+        ImageView ivIcon = dialogView.findViewById(R.id.ivDetailIcon);
+        TextView tvName = dialogView.findViewById(R.id.tvDetailName);
+        TextView tvSubtitle = dialogView.findViewById(R.id.tvDetailSubtitle); // We might construct this from tags
+        TextView tvCost = dialogView.findViewById(R.id.tvDetailCost);
+        TextView tvDescription = dialogView.findViewById(R.id.tvDetailDescription);
+
+        // Set Data
+        tvName.setText(item.getName() != null ? item.getName() : "Unknown");
+
+        // Cost
+        if (item.getGold() != null) {
+            // Add Gold Icon to Price
+            // Use Html.fromHtml with image getter for the gold icon
+            String goldHtml = String.valueOf(item.getGold().getTotal()) + " <img src='ic_stat_gold'/>";
+            tvCost.setText(android.text.Html.fromHtml(goldHtml, android.text.Html.FROM_HTML_MODE_LEGACY, source -> {
+                int resourceId = getResources().getIdentifier(source, "drawable", getPackageName());
+                if (resourceId != 0) {
+                    android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(this, resourceId);
+                    if (d != null) {
+                        d.setBounds(0, 0, 40, 40); // Slightly larger for UI
+                        return d;
+                    }
+                }
+                return null;
+            }, null));
+        } else {
+            tvCost.setVisibility(View.GONE);
+        }
+
+        // Subtitle (Tags)
+        if (item.getTags() != null && !item.getTags().isEmpty()) {
+            StringBuilder tagsBuilder = new StringBuilder();
+            for (int i = 0; i < item.getTags().size(); i++) {
+                String translatedTag = formatTag(item.getTags().get(i));
+                tagsBuilder.append(translatedTag);
+                if (i < item.getTags().size() - 1) {
+                    tagsBuilder.append(", ");
+                }
+            }
+            tvSubtitle.setText(tagsBuilder.toString());
+        } else {
+            tvSubtitle.setVisibility(View.GONE);
+        }
+
+        // Image
+        if (item.getImage() != null) {
+            String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + item.getImage().getFull();
+            com.bumptech.glide.Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.color.lol_blue_light)
+                .into(ivIcon);
+        }
+
+        // Description
+        if (item.getDescription() != null) {
+            String formattedDescription = formatDescription(item.getDescription());
+            
+            android.text.Html.ImageGetter imageGetter = source -> {
+                int resourceId = getResources().getIdentifier(source, "drawable", getPackageName());
+                if (resourceId != 0) {
+                    android.graphics.drawable.Drawable drawable = androidx.core.content.ContextCompat.getDrawable(ItemsActivity.this, resourceId);
+                    if (drawable != null) {
+                        // Scale image to match text size roughly (e.g. 1.0x line height or fixed size)
+                        int size = (int) (tvDescription.getTextSize() * 1.1);
+                        drawable.setBounds(0, 0, size, size);
+                        return drawable;
+                    }
+                }
+                return null;
+            };
+
+            android.text.Spanned spanned;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                spanned = android.text.Html.fromHtml(formattedDescription, android.text.Html.FROM_HTML_MODE_LEGACY, imageGetter, null);
+            } else {
+                spanned = android.text.Html.fromHtml(formattedDescription, imageGetter, null);
+            }
+            
+            // Replace ImageSpans with CenteredImageSpans
+            if (spanned instanceof android.text.SpannableStringBuilder) {
+                android.text.SpannableStringBuilder ssb = (android.text.SpannableStringBuilder) spanned;
+                android.text.style.ImageSpan[] imageSpans = ssb.getSpans(0, ssb.length(), android.text.style.ImageSpan.class);
+                for (android.text.style.ImageSpan span : imageSpans) {
+                    int start = ssb.getSpanStart(span);
+                    int end = ssb.getSpanEnd(span);
+                    int flags = ssb.getSpanFlags(span);
+                    ssb.removeSpan(span);
+                    ssb.setSpan(new CenteredImageSpan(span.getDrawable()), start, end, flags);
+                }
+                tvDescription.setText(ssb);
+            } else {
+                tvDescription.setText(spanned);
+            }
+
+        } else {
+            tvDescription.setVisibility(View.GONE);
+        }
+
+        dialog.show();
     }
 }

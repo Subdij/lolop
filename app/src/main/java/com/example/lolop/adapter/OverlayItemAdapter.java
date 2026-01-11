@@ -17,11 +17,23 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
     private Context context;
     private List<Item> items;
     private String version;
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(Item item);
+    }
 
     public OverlayItemAdapter(Context context, List<Item> items, String version) {
         this.context = context;
         this.items = items;
         this.version = version;
+        if (context instanceof OnItemClickListener) {
+            this.listener = (OnItemClickListener) context;
+        }
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -45,6 +57,12 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
                  .placeholder(R.color.lol_blue_light)
                  .into(holder.ivIcon);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(item);
+            }
+        });
     }
 
     @Override
