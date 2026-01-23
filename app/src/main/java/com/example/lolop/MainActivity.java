@@ -1,5 +1,6 @@
 package com.example.lolop;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -195,7 +196,15 @@ public class MainActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.nav_champions) {
                 return true;
             } else if (item.getItemId() == R.id.nav_items) {
-                startActivity(new android.content.Intent(MainActivity.this, ItemsActivity.class));
+                Intent intent = new Intent(MainActivity.this, ItemsActivity.class);
+                intent.putExtra("CURRENT_VERSION", currentVersion);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (item.getItemId() == R.id.nav_patch) {
+                Intent intent = new Intent(MainActivity.this, PatchNoteActivity.class);
+                intent.putExtra("CURRENT_VERSION", currentVersion);
+                startActivity(intent);
                 overridePendingTransition(0, 0);
                 return true;
             }

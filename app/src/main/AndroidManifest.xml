@@ -32,6 +32,10 @@
             android:name=".ItemsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".PatchNoteActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".receiver.ManaReceiver"
             android:exported="true">

@@ -368,8 +368,16 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
                 startActivity(new Intent(ItemsActivity.this, MainActivity.class));
                 overridePendingTransition(0, 0); // No animation
                 return true;
+            } else if (item.getItemId() == R.id.nav_items) {
+                return true;
+            } else if (item.getItemId() == R.id.nav_patch) {
+                Intent intent = new Intent(ItemsActivity.this, PatchNoteActivity.class);
+                intent.putExtra("CURRENT_VERSION", currentVersion);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                return true;
             }
-            return item.getItemId() == R.id.nav_items;
+            return false;
         });
     }
 
