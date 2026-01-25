@@ -379,12 +379,23 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private void setupSearch() {
+        android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        final Runnable searchRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String query = binding.etSearchItems.getText().toString();
+                filterData(query);
+            }
+        };
+
         binding.etSearchItems.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterData(s.toString());
+                // Debounce search (300ms) to avoid lagging while typing fast
+                searchHandler.removeCallbacks(searchRunnable);
+                searchHandler.postDelayed(searchRunnable, 300);
             }
 
             @Override public void afterTextChanged(Editable s) {}
@@ -394,103 +405,109 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private void filterData(String query) {
         if (categoryAdapter == null) return;
 
-        if (query.isEmpty()) {
-            listDataHeader = new ArrayList<>(originalDataHeader);
-            listDataChild.clear();
-            listDataChild.putAll(originalDataChild);
-            categoryAdapter.updateData(originalDataHeader, originalDataChild);
-            return;
-        }
+        new Thread(() -> {
+            if (query.isEmpty()) {
+                runOnUiThread(() -> {
+                    listDataHeader = new ArrayList<>(originalDataHeader);
+                    listDataChild.clear();
+                    listDataChild.putAll(originalDataChild);
+                    categoryAdapter.updateData(originalDataHeader, originalDataChild);
+                });
+                return;
+            }
 
-        String normalizedQuery = stripAccents(query.toLowerCase());
-        List<String> filteredHeaders = new ArrayList<>();
-        HashMap<String, List<Item>> filteredChild = new HashMap<>();
-        
-        Map<String, Item> allMatchesMap = new HashMap<>();
-
-        for (String header : originalDataHeader) {
-            List<Item> originalItems = originalDataChild.get(header);
-            List<Item> filteredItems = new ArrayList<>();
+            String normalizedQuery = stripAccents(query.toLowerCase());
+            List<String> filteredHeaders = new ArrayList<>();
+            HashMap<String, List<Item>> filteredChild = new HashMap<>();
             
-            boolean headerMatches = stripAccents(header.toLowerCase()).contains(normalizedQuery);
+            Map<String, Item> allMatchesMap = new HashMap<>();
 
-            if (!headerMatches) {
-                for (Map.Entry<String, String> entry : CATEGORY_ALIASES.entrySet()) {
-                    if (entry.getKey().contains(normalizedQuery)) {
-                        if (header.equalsIgnoreCase(entry.getValue())) {
-                            headerMatches = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (headerMatches) {
-                // If header matches, show ALL items in this category
-                if (originalItems != null) {
-                    filteredItems.addAll(originalItems);
-                }
-            } else if (originalItems != null) {
-                // Iterate through items individually to check for matches
-                for (Item item : originalItems) {
-                    boolean match = false;
-                    
-                    // Check French Name
-                    if (item.getName() != null) {
-                        String normalizedItemName = stripAccents(item.getName().toLowerCase());
-                        if (normalizedItemName.contains(normalizedQuery)) {
-                            match = true;
-                        }
-                    }
-                    
-                    // Check English Name
-                    if (!match && item.getId() != null) {
-                         String enName = englishItemNames.get(item.getId());
-                         if (enName != null) {
-                             String normalizedEnName = stripAccents(enName.toLowerCase());
-                             if (normalizedEnName.contains(normalizedQuery)) {
-                                 match = true;
-                             }
-                         }
-                    }
-
-                    if (match) {
-                        filteredItems.add(item);
-                    }
-                }
-            }
-
-            if (!filteredItems.isEmpty()) {
-                filteredHeaders.add(header);
-                filteredChild.put(header, filteredItems);
+            for (String header : originalDataHeader) {
+                List<Item> originalItems = originalDataChild.get(header);
+                List<Item> filteredItems = new ArrayList<>();
                 
-                for (Item item : filteredItems) {
-                    if (item.getId() != null) {
-                        allMatchesMap.put(item.getId(), item);
+                boolean headerMatches = stripAccents(header.toLowerCase()).contains(normalizedQuery);
+
+                if (!headerMatches) {
+                    for (Map.Entry<String, String> entry : CATEGORY_ALIASES.entrySet()) {
+                        if (entry.getKey().contains(normalizedQuery)) {
+                            if (header.equalsIgnoreCase(entry.getValue())) {
+                                headerMatches = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (headerMatches) {
+                    // If header matches, show ALL items in this category
+                    if (originalItems != null) {
+                        filteredItems.addAll(originalItems);
+                    }
+                } else if (originalItems != null) {
+                    // Iterate through items individually to check for matches
+                    for (Item item : originalItems) {
+                        boolean match = false;
+                        
+                        // Check French Name
+                        if (item.getName() != null) {
+                            String normalizedItemName = stripAccents(item.getName().toLowerCase());
+                            if (normalizedItemName.contains(normalizedQuery)) {
+                                match = true;
+                            }
+                        }
+                        
+                        // Check English Name
+                        if (!match && item.getId() != null) {
+                             String enName = englishItemNames.get(item.getId());
+                             if (enName != null) {
+                                 String normalizedEnName = stripAccents(enName.toLowerCase());
+                                 if (normalizedEnName.contains(normalizedQuery)) {
+                                     match = true;
+                                 }
+                             }
+                        }
+
+                        if (match) {
+                            filteredItems.add(item);
+                        }
+                    }
+                }
+
+                if (!filteredItems.isEmpty()) {
+                    filteredHeaders.add(header);
+                    filteredChild.put(header, filteredItems);
+                    
+                    for (Item item : filteredItems) {
+                        if (item.getId() != null) {
+                            allMatchesMap.put(item.getId(), item);
+                        }
                     }
                 }
             }
-        }
-        
-        if (!allMatchesMap.isEmpty()) {
-            String toutHeader = getString(R.string.category_all);
-            List<Item> allItems = new ArrayList<>(allMatchesMap.values());
-            Collections.sort(allItems, (i1, i2) -> {
-                String n1 = i1.getName();
-                String n2 = i2.getName();
-                if (n1 == null) return -1;
-                if (n2 == null) return 1;
-                return n1.compareToIgnoreCase(n2);
-            });
             
-            filteredHeaders.add(0, toutHeader);
-            filteredChild.put(toutHeader, allItems);
-        }
+            if (!allMatchesMap.isEmpty()) {
+                String toutHeader = getString(R.string.category_all);
+                List<Item> allItems = new ArrayList<>(allMatchesMap.values());
+                Collections.sort(allItems, (i1, i2) -> {
+                    String n1 = i1.getName();
+                    String n2 = i2.getName();
+                    if (n1 == null) return -1;
+                    if (n2 == null) return 1;
+                    return n1.compareToIgnoreCase(n2);
+                });
+                
+                filteredHeaders.add(0, toutHeader);
+                filteredChild.put(toutHeader, allItems);
+            }
 
-        listDataHeader = filteredHeaders;
-        listDataChild.clear();
-        listDataChild.putAll(filteredChild);
-        categoryAdapter.updateData(filteredHeaders, filteredChild);
+            runOnUiThread(() -> {
+                listDataHeader = filteredHeaders;
+                listDataChild.clear();
+                listDataChild.putAll(filteredChild);
+                categoryAdapter.updateData(filteredHeaders, filteredChild);
+            });
+        }).start();
     }
 
     private String stripAccents(String s) {
@@ -528,14 +545,18 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         RetrofitClient.getApiService().getItems(currentVersion, lang).enqueue(new Callback<ItemResponse>() {
             @Override
             public void onResponse(@NonNull Call<ItemResponse> call, @NonNull Response<ItemResponse> response) {
+                // Secondary items fetch finished, hide loader here if strictly needed,
+                // but processItems usually handles main UI. Keeping consistent with previous logic.
                 binding.progressBarItems.setVisibility(View.GONE);
                 
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    for (Map.Entry<String, Item> entry : response.body().getData().entrySet()) {
-                        if (entry.getValue().getName() != null) {
-                            englishItemNames.put(entry.getKey(), entry.getValue().getName());
+                    new Thread(() -> {
+                        for (Map.Entry<String, Item> entry : response.body().getData().entrySet()) {
+                            if (entry.getValue().getName() != null) {
+                                englishItemNames.put(entry.getKey(), entry.getValue().getName());
+                            }
                         }
-                    }
+                    }).start();
                 }
             }
 
@@ -549,222 +570,225 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private void processItems(Map<String, Item> data) {
         if (data == null) return;
 
-        // Reset data
-        listDataHeader.clear();
-        listDataChild.clear();
+        new Thread(() -> {
+            // Temporary map to group items by tag
+            HashMap<String, List<Item>> tempMap = new HashMap<>();
 
-        // Temporary map to group items by tag
-        HashMap<String, List<Item>> tempMap = new HashMap<>();
-
-        // Pre-process: Sort by ID to prioritize standard items and Deduplicate by Name
-        List<Item> sortedItems = new ArrayList<>();
-        for (Map.Entry<String, Item> entry : data.entrySet()) {
-            Item item = entry.getValue();
-            item.setId(entry.getKey());
-            sortedItems.add(item);
-        }
-        
-        // Sort by ID (numerical) to prioritize lower IDs (standard items) over higher IDs (special modes)
-        Collections.sort(sortedItems, (i1, i2) -> {
-            try {
-                int id1 = Integer.parseInt(i1.getId());
-                int id2 = Integer.parseInt(i2.getId());
-                return Integer.compare(id1, id2);
-            } catch (NumberFormatException e) {
-                return i1.getId().compareTo(i2.getId());
-            }
-        });
-
-        Set<String> seenNames = new HashSet<>();
-
-        for (Item item : sortedItems) {
-            // Filter out items without name or generic/internal items
-            if (item.getName() == null || item.getName().isEmpty()) continue;
-
-            // Deduplicate by Name (Case insensitive logic if needed, but strict name usually works)
-            if (seenNames.contains(item.getName())) continue;
-            seenNames.add(item.getName());
-
-            // map 11 is Summoner's Rift
-            if (item.getMaps() == null || !Boolean.TRUE.equals(item.getMaps().get("11"))) {
-                continue;
-            }
-
-            // Exclude non-purchasable items or hidden items
-            if (!item.isInStore()) continue;
-            if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
-
-            // Ensure we don't show required champion items unless necessary
-            if (item.getRequiredChampion() != null) continue;
-
-            // Filter out Ornn upgrades (they contain <ornnBonus> in description)
-            if (item.getDescription() != null && item.getDescription().contains("<ornnBonus>")) {
-                continue;
-            }
-
-            // Explicitly filter "obsidienne" items as requested
-            if (item.getName().toLowerCase().contains("obsidienne")) {
-                continue;
+            // Pre-process: Sort by ID to prioritize standard items and Deduplicate by Name
+            List<Item> sortedItems = new ArrayList<>();
+            for (Map.Entry<String, Item> entry : data.entrySet()) {
+                Item item = entry.getValue();
+                item.setId(entry.getKey());
+                sortedItems.add(item);
             }
             
-            // Map items to tags
-            List<String> tags = item.getTags();
-            if (tags == null || tags.isEmpty()) continue;
+            // Sort by ID (numerical) to prioritize lower IDs (standard items) over higher IDs (special modes)
+            Collections.sort(sortedItems, (i1, i2) -> {
+                try {
+                    int id1 = Integer.parseInt(i1.getId());
+                    int id2 = Integer.parseInt(i2.getId());
+                    return Integer.compare(id1, id2);
+                } catch (NumberFormatException e) {
+                    return i1.getId().compareTo(i2.getId());
+                }
+            });
 
-            Set<String> uniqueCategories = new HashSet<>();
-            for (String tag : tags) {
-                uniqueCategories.add(formatTag(tag));
-            }
-            for (String category : uniqueCategories) {
-                addToMap(tempMap, category, item);
-            }
-            
-            // Custom Logic: Anti-heal (Hémorragie)
-            // Check description for keywords
-            if (item.getDescription() != null) {
-                String lowerDesc = item.getDescription().toLowerCase();
-                // Keep Anti-heal logic
-                if (lowerDesc.contains("hémorragie") || lowerDesc.contains("grievous wounds") || lowerDesc.contains("réduit les soins")) {
-                    addToMap(tempMap, getString(R.string.cat_anti_heal), item);
+            Set<String> seenNames = new HashSet<>();
+
+            for (Item item : sortedItems) {
+                // Filter out items without name or generic/internal items
+                if (item.getName() == null || item.getName().isEmpty()) continue;
+
+                // Deduplicate by Name (Case insensitive logic if needed, but strict name usually works)
+                if (seenNames.contains(item.getName())) continue;
+                seenNames.add(item.getName());
+
+                // map 11 is Summoner's Rift
+                if (item.getMaps() == null || !Boolean.TRUE.equals(item.getMaps().get("11"))) {
+                    continue;
+                }
+
+                // Exclude non-purchasable items or hidden items
+                if (!item.isInStore()) continue;
+                if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
+
+                // Ensure we don't show required champion items unless necessary
+                if (item.getRequiredChampion() != null) continue;
+
+                // Filter out Ornn upgrades (they contain <ornnBonus> in description)
+                if (item.getDescription() != null && item.getDescription().contains("<ornnBonus>")) {
+                    continue;
+                }
+
+                // Explicitly filter "obsidienne" items as requested
+                if (item.getName().toLowerCase().contains("obsidienne")) {
+                    continue;
                 }
                 
-                // Consolided Anti-shield Logic to prevent duplicates
-                boolean isAntiShield = false;
-                if (lowerDesc.contains("réduit les boucliers") || lowerDesc.contains("shield reave")) {
-                    isAntiShield = true;
-                } else if (item.getName() != null && item.getName().equalsIgnoreCase("Crochet de serpent")) {
-                    isAntiShield = true;
+                // Map items to tags
+                List<String> tags = item.getTags();
+                if (tags == null || tags.isEmpty()) continue;
+
+                Set<String> uniqueCategories = new HashSet<>();
+                for (String tag : tags) {
+                    uniqueCategories.add(formatTag(tag));
+                }
+                for (String category : uniqueCategories) {
+                    addToMap(tempMap, category, item);
                 }
                 
-                if (isAntiShield) {
-                     addToMap(tempMap, getString(R.string.cat_anti_shield), item);
-                }
-
-                // Létalité
-                if (lowerDesc.contains("létalité") || lowerDesc.contains("lethality")) {
-                    addToMap(tempMap, getString(R.string.cat_lethality), item);
-                }
-
-                // Lame enchantée (Spellblade)
-                if (lowerDesc.contains("lame enchantée") || lowerDesc.contains("spellblade")) {
-                     addToMap(tempMap, getString(R.string.cat_spellblade), item);
-                }
-
-                // Lien vital (Lifeline)
-                if (lowerDesc.contains("lien vital") || lowerDesc.contains("lifeline")) {
-                    addToMap(tempMap, getString(R.string.cat_lifeline), item);
-                }
-
-                // Bouclier (Donne un bouclier / Shielding)
-                // Use keywords like "confère un bouclier" (grants a shield) to avoid anti-shield items
-                if (lowerDesc.contains("confère un bouclier") || lowerDesc.contains("octroie un bouclier") || lowerDesc.contains("grants a shield")) {
-                     addToMap(tempMap, getString(R.string.cat_shield), item);
-                }
-            }
-        }
-
-        // Sort headers by custom order
-        listDataHeader = new ArrayList<>(tempMap.keySet());
-        // Explicitly remove "Furtivité" if it exists in the keys
-        listDataHeader.remove("Furtivité");
-
-        Collections.sort(listDataHeader, (o1, o2) -> {
-            int index1 = CATEGORY_ORDER.indexOf(o1);
-            int index2 = CATEGORY_ORDER.indexOf(o2);
-            
-            // If both are in the list, compare indices
-            if (index1 != -1 && index2 != -1) {
-                return Integer.compare(index1, index2);
-            }
-            // If only one is in the list, it comes first
-            if (index1 != -1) return -1;
-            if (index2 != -1) return 1;
-            
-            // If neither is in the list, sort alphabetically
-            return o1.compareToIgnoreCase(o2);
-        });
-
-        // Sort items within each header and populate child map
-        for (String header : listDataHeader) {
-            List<Item> items = tempMap.get(header);
-            
-            if (items != null) {
-                // Sort by gold, then name
-                Collections.sort(items, (i1, i2) -> {
-                     int price1 = (i1.getGold() != null) ? i1.getGold().getTotal() : 0;
-                     int price2 = (i2.getGold() != null) ? i2.getGold().getTotal() : 0;
-                     if (price1 != price2) return Integer.compare(price1, price2);
-                     
-                     String n1 = i1.getName();
-                     String n2 = i2.getName();
-                     if (n1 == null) return -1;
-                     if (n2 == null) return 1;
-                     return n1.compareToIgnoreCase(n2);
-                });
-            }
-
-            listDataChild.put(header, items);
-            
-            // Capture representative item for this header (First item)
-            // Only do this on initial load (when representativeItems is empty or we want to ensure stability)
-            // Capture representative item for this header
-            if (items != null && !items.isEmpty() && !representativeItems.containsKey(header)) {
-                Item repItem = items.get(0); // Default to first item
-                
-                // Check for preferred custom image
-                if (preferredCategoryImages.containsKey(header)) {
-                    String preferredId = preferredCategoryImages.get(header);
-                    // Search in ALL items to find the preferred one, not just this category's items 
-                    // (though it likely should be in this category, scanning global sorted set is safer if we want strict match)
-                    // For improved performance, we check items in this category first.
-                    
-                    boolean found = false;
-                    for (Item item : items) {
-                         if (item.getId() != null && item.getId().equals(preferredId)) {
-                             repItem = item;
-                             found = true;
-                             break;
-                         }
+                // Custom Logic: Anti-heal (Hémorragie)
+                // Check description for keywords
+                if (item.getDescription() != null) {
+                    String lowerDesc = item.getDescription().toLowerCase();
+                    // Keep Anti-heal logic
+                    if (lowerDesc.contains("hémorragie") || lowerDesc.contains("grievous wounds") || lowerDesc.contains("réduit les soins")) {
+                        addToMap(tempMap, getString(R.string.cat_anti_heal), item);
                     }
                     
-                    if (!found) {
-                        // Fallback: search in all sortedItems if not found in category (rare case)
-                         for (Item item : sortedItems) { // sortedItems is available in this scope
+                    // Consolided Anti-shield Logic to prevent duplicates
+                    boolean isAntiShield = false;
+                    if (lowerDesc.contains("réduit les boucliers") || lowerDesc.contains("shield reave")) {
+                        isAntiShield = true;
+                    } else if (item.getName() != null && item.getName().equalsIgnoreCase("Crochet de serpent")) {
+                        isAntiShield = true;
+                    }
+                    
+                    if (isAntiShield) {
+                         addToMap(tempMap, getString(R.string.cat_anti_shield), item);
+                    }
+
+                    // Létalité
+                    if (lowerDesc.contains("létalité") || lowerDesc.contains("lethality")) {
+                        addToMap(tempMap, getString(R.string.cat_lethality), item);
+                    }
+
+                    // Lame enchantée (Spellblade)
+                    if (lowerDesc.contains("lame enchantée") || lowerDesc.contains("spellblade")) {
+                         addToMap(tempMap, getString(R.string.cat_spellblade), item);
+                    }
+
+                    // Lien vital (Lifeline)
+                    if (lowerDesc.contains("lien vital") || lowerDesc.contains("lifeline")) {
+                        addToMap(tempMap, getString(R.string.cat_lifeline), item);
+                    }
+
+                    // Bouclier (Donne un bouclier / Shielding)
+                    // Use keywords like "confère un bouclier" (grants a shield) to avoid anti-shield items
+                    if (lowerDesc.contains("confère un bouclier") || lowerDesc.contains("octroie un bouclier") || lowerDesc.contains("grants a shield")) {
+                         addToMap(tempMap, getString(R.string.cat_shield), item);
+                    }
+                }
+            }
+
+            // Sort headers by custom order
+            List<String> localHeader = new ArrayList<>(tempMap.keySet());
+            // Explicitly remove "Furtivité" if it exists in the keys
+            localHeader.remove("Furtivité");
+
+            Collections.sort(localHeader, (o1, o2) -> {
+                int index1 = CATEGORY_ORDER.indexOf(o1);
+                int index2 = CATEGORY_ORDER.indexOf(o2);
+                
+                // If both are in the list, compare indices
+                if (index1 != -1 && index2 != -1) {
+                    return Integer.compare(index1, index2);
+                }
+                // If only one is in the list, it comes first
+                if (index1 != -1) return -1;
+                if (index2 != -1) return 1;
+                
+                // If neither is in the list, sort alphabetically
+                return o1.compareToIgnoreCase(o2);
+            });
+
+            // Sort items within each header and populate child map
+            // Use local copies to thread safety before posting back
+            for (String header : localHeader) {
+                List<Item> items = tempMap.get(header);
+                
+                if (items != null) {
+                    // Sort by gold, then name
+                    Collections.sort(items, (i1, i2) -> {
+                         int price1 = (i1.getGold() != null) ? i1.getGold().getTotal() : 0;
+                         int price2 = (i2.getGold() != null) ? i2.getGold().getTotal() : 0;
+                         if (price1 != price2) return Integer.compare(price1, price2);
+                         
+                         String n1 = i1.getName();
+                         String n2 = i2.getName();
+                         if (n1 == null) return -1;
+                         if (n2 == null) return 1;
+                         return n1.compareToIgnoreCase(n2);
+                    });
+                }
+                
+                // Capture representative item for this header (First item)
+                if (items != null && !items.isEmpty() && !representativeItems.containsKey(header)) {
+                    Item repItem = items.get(0); // Default to first item
+                    
+                    // Check for preferred custom image
+                    if (preferredCategoryImages.containsKey(header)) {
+                        String preferredId = preferredCategoryImages.get(header);
+                        
+                        boolean found = false;
+                        for (Item item : items) {
                              if (item.getId() != null && item.getId().equals(preferredId)) {
                                  repItem = item;
+                                 found = true;
                                  break;
                              }
-                         }
+                        }
+                        
+                        if (!found) {
+                            // Fallback
+                             for (Item item : sortedItems) { 
+                                 if (item.getId() != null && item.getId().equals(preferredId)) {
+                                     repItem = item;
+                                     break;
+                                 }
+                             }
+                        }
                     }
+                    
+                    representativeItems.put(header, repItem);
                 }
+            }
+            
+            // Post result to UI Thread
+            runOnUiThread(() -> {
+                // Save results
+                listDataHeader.clear();
+                listDataHeader.addAll(localHeader);
                 
-                representativeItems.put(header, repItem);
-            }
-        }
+                listDataChild.clear();
+                listDataChild.putAll(tempMap);
 
-        // Save original for search
-        originalDataHeader = new ArrayList<>(listDataHeader);
-        originalDataChild = new HashMap<>(listDataChild);
+                // Save original for search
+                originalDataHeader = new ArrayList<>(listDataHeader);
+                originalDataChild = new HashMap<>(listDataChild);
 
-        // Set adapter
-        categoryAdapter = new CategoryAdapter(this, listDataHeader, listDataChild, currentVersion, representativeItems, category -> {
-             showOverlay(category);
-        });
-        
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
-        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-            @Override
-            public int getSpanSize(int position) {
-                // "Tout" takes 2 spans (full width), others take 1
-                if (getString(R.string.category_all).equals(categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
-                    return 2;
-                }
-                return 1;
-            }
-        });
-        
-        binding.rvCategories.setLayoutManager(layoutManager);
-        binding.rvCategories.setAdapter(categoryAdapter);
+                // Set adapter
+                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion, representativeItems, category -> {
+                     showOverlay(category);
+                });
+                
+                GridLayoutManager layoutManager = new GridLayoutManager(ItemsActivity.this, 2);
+                layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                    @Override
+                    public int getSpanSize(int position) {
+                        // "Tout" takes 2 spans (full width), others take 1
+                        if (getString(R.string.category_all).equals(categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
+                            return 2;
+                        }
+                        return 1;
+                    }
+                });
+                
+                binding.rvCategories.setLayoutManager(layoutManager);
+                binding.rvCategories.setAdapter(categoryAdapter);
+            });
+            
+        }).start();
     }
 
     private void addToMap(HashMap<String, List<Item>> map, String key, Item item) {

@@ -51,4 +51,18 @@ public class FavoriteDatabase extends SQLiteOpenHelper {
         cursor.close();
         return exists;
     }
+
+    public java.util.HashSet<String> getAllFavorites() {
+        java.util.HashSet<String> favorites = new java.util.HashSet<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_FAVORITES, new String[]{COLUMN_ID}, null, null, null, null, null);
+        
+        if (cursor.moveToFirst()) {
+            do {
+                favorites.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return favorites;
+    }
 }

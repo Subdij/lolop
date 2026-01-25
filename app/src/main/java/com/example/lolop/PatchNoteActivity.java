@@ -54,6 +54,7 @@ public class PatchNoteActivity extends BaseActivity {
         WebSettings webSettings = binding.webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); // Optimisation: Cache
         binding.webView.setBackgroundColor(getResources().getColor(R.color.lol_blue_deep));
         
         binding.webView.setWebViewClient(new WebViewClient() {
@@ -95,31 +96,39 @@ public class PatchNoteActivity extends BaseActivity {
                      "{ display: none !important; } " +
                      "html, body { margin-top: -90px !important; padding-top: 0 !important; background-color: #010a13 !important; } ";
         
-        String js = "var css = \"" + css + "\"; " +
-                    "var style = document.createElement('style'); " +
-                    "style.innerHTML = css; " +
-                    "document.head.appendChild(style); " +
-                    "setInterval(function() { " +
-                    "  var style = document.createElement('style'); " +
-                    "  style.innerHTML = css; " +
-                    "  document.head.appendChild(style); " +
-                    "  /* Robust Text-Based Hiding */ " +
-                    "  var elements = document.getElementsByTagName('*'); " +
-                    "  for (var i = 0; i < elements.length; i++) { " +
-                    "    var el = elements[i]; " +
-                    "    if (el.innerText) { " +
-                    "       var text = el.innerText.toUpperCase(); " +
-                    "       if (text.includes('ABOUT LEAGUE OF LEGENDS') || text.includes('A PROPOS DE LEAGUE OF LEGENDS') || " +
-                    "           text.includes('HELP US IMPROVE') || text.includes('AIDEZ-NOUS') || " +
-                    "           text.includes('PRIVACY NOTICE') || text.includes('POLITIQUE DE CONFIDENTIALITE')) { " +
-                    "           var target = el.closest('footer'); " +
-                    "           if (!target) target = el.closest('div[id*=\"footer\"]'); " +
-                    "           if (!target) target = el.closest('div[class*=\"footer\"]'); " +
-                    "           if (target) { target.style.display = 'none'; target.style.visibility = 'hidden'; } " +
-                    "       } " +
-                    "    } " +
-                    "  } " +
-                    "}, 500);"; 
+        String js = "(function() {" +
+                    "    var css = \"" + css + "\";" +
+                    "    var style = document.createElement('style');" +
+                    "    style.innerHTML = css;" +
+                    "    document.head.appendChild(style);" +
+                    "    " +
+                    "    function hideElements() {" +
+                    "        var elements = document.getElementsByTagName('*');" +
+                    "        for (var i = 0; i < elements.length; i++) {" +
+                    "            var el = elements[i];" +
+                    "            if (el.innerText) {" +
+                    "               var text = el.innerText.toUpperCase();" +
+                    "               if (text.includes('ABOUT LEAGUE OF LEGENDS') || text.includes('A PROPOS DE LEAGUE OF LEGENDS') ||" +
+                    "                   text.includes('HELP US IMPROVE') || text.includes('AIDEZ-NOUS') ||" +
+                    "                   text.includes('PRIVACY NOTICE') || text.includes('POLITIQUE DE CONFIDENTIALITE')) {" +
+                    "                   var target = el.closest('footer'); " +
+                    "                   if (!target) target = el.closest('div[id*=\"footer\"]'); " +
+                    "                   if (!target) target = el.closest('div[class*=\"footer\"]'); " +
+                    "                   if (target) { target.style.display = 'none'; target.style.visibility = 'hidden'; }" +
+                    "               }" +
+                    "            }" +
+                    "        }" +
+                    "    }" +
+                    "    " +
+                    "    /* Initial Run */" +
+                    "    hideElements();" +
+                    "    " +
+                    "    /* Mutation Observer for dynamic content */" +
+                    "    var observer = new MutationObserver(function(mutations) {" +
+                    "        hideElements();" +
+                    "    });" +
+                    "    observer.observe(document.body, { childList: true, subtree: true });" +
+                    "})();";
 
         view.evaluateJavascript(js, null);
     }

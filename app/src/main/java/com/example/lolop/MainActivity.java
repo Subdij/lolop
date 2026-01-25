@@ -30,6 +30,7 @@ public class MainActivity extends BaseActivity {
     private ArrayList<Champion> championList = new ArrayList<>();
     private String currentVersion = "14.5.1"; // Default fallback
     private FavoriteDatabase db;
+    private java.util.Set<String> favoriteIds = new java.util.HashSet<>();
     private String currentRoleFilter = "All";
     private View currentSelectedView = null;
 
@@ -63,6 +64,22 @@ public class MainActivity extends BaseActivity {
             }
         } else {
             fetchLatestVersion();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshFavorites();
+    }
+
+    private void refreshFavorites() {
+        if (db != null) {
+            favoriteIds = db.getAllFavorites();
+            if (adapter != null) {
+                adapter.setFavorites(favoriteIds);
+                sortAndDisplayChampions();
+            }
         }
     }
 
@@ -199,7 +216,7 @@ public class MainActivity extends BaseActivity {
 
     private void setupRecyclerView() {
         adapter = new ChampionAdapter(currentVersion);
-        adapter.setDatabase(db);
+        adapter.setFavorites(favoriteIds);
         binding.rvChampions.setLayoutManager(new GridLayoutManager(this, 3));
         binding.rvChampions.setAdapter(adapter);
     }
@@ -228,8 +245,10 @@ public class MainActivity extends BaseActivity {
         if (championList == null || championList.isEmpty()) return;
         ArrayList<Champion> favorites = new ArrayList<>();
         ArrayList<Champion> others = new ArrayList<>();
+        if (favoriteIds == null) refreshFavorites();
+        
         for (Champion champion : championList) {
-            if (db.isFavorite(champion.getId())) favorites.add(champion);
+            if (favoriteIds.contains(champion.getId())) favorites.add(champion);
             else others.add(champion);
         }
         Collections.sort(favorites, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));

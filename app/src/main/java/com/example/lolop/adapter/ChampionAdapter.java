@@ -19,7 +19,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
     private List<Champion> champions = new ArrayList<>();
     private List<Champion> championsFull = new ArrayList<>();
     private String version;
-    private FavoriteDatabase db;
+    private java.util.Set<String> favoriteIds = new java.util.HashSet<>();
     private String currentSearchText = "";
     private String currentRoleFilter = "All";
 
@@ -31,8 +31,9 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         this.version = version;
     }
 
-    public void setDatabase(FavoriteDatabase db) {
-        this.db = db;
+    public void setFavorites(java.util.Set<String> favoriteIds) {
+        this.favoriteIds = favoriteIds;
+        notifyDataSetChanged();
     }
 
     public void setChampions(List<Champion> champions) {
@@ -97,7 +98,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
                     .into(holder.binding.ivChampionIcon);
         }
 
-        if (db != null && db.isFavorite(champion.getId())) {
+        if (favoriteIds != null && favoriteIds.contains(champion.getId())) {
             holder.binding.ivFavoriteStar.setVisibility(View.VISIBLE);
         } else {
             holder.binding.ivFavoriteStar.setVisibility(View.GONE);
