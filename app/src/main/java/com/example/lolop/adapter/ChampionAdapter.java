@@ -83,10 +83,19 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
 
         String iconUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/champion/" + champion.getImage().getFull();
         
-        Glide.with(holder.itemView.getContext())
-                .load(iconUrl)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(holder.binding.ivChampionIcon);
+        if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(iconUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                    .dontAnimate()
+                    .into(holder.binding.ivChampionIcon);
+        } else {
+            Glide.with(holder.itemView.getContext())
+                    .load(iconUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.binding.ivChampionIcon);
+        }
 
         if (db != null && db.isFavorite(champion.getId())) {
             holder.binding.ivFavoriteStar.setVisibility(View.VISIBLE);

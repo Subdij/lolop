@@ -52,10 +52,19 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
         // Load image
         if (item.getImage() != null) {
             String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/item/" + item.getImage().getFull();
-            Glide.with(context)
-                 .load(imageUrl)
-                 .placeholder(R.color.lol_blue_light)
-                 .into(holder.ivIcon);
+            if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+                Glide.with(context)
+                     .load(imageUrl)
+                     .placeholder(R.color.lol_blue_light)
+                     .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                     .dontAnimate()
+                     .into(holder.ivIcon);
+            } else {
+                Glide.with(context)
+                     .load(imageUrl)
+                     .placeholder(R.color.lol_blue_light)
+                     .into(holder.ivIcon);
+            }
         }
 
         holder.itemView.setOnClickListener(v -> {

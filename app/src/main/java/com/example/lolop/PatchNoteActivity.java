@@ -13,7 +13,7 @@ import com.example.lolop.databinding.ActivityPatchNoteBinding;
 import com.example.lolop.utils.LocaleHelper;
 import android.content.Context;
 
-public class PatchNoteActivity extends AppCompatActivity {
+public class PatchNoteActivity extends BaseActivity {
 
     private ActivityPatchNoteBinding binding;
     private String currentVersion = "14.5.1";
@@ -90,7 +90,8 @@ public class PatchNoteActivity extends AppCompatActivity {
 
     private void injectCSS(WebView view) {
         String css = "nav, header, footer, #riotbar-bar, #riotbar-header, #riotbar-footer, .riotbar-navbar, .riotbar-mobile-bar, " +
-                     "#riotbar-account, .footer-container, #osano-cm-window, [data-testid='riotbar'] " + 
+                     "#riotbar-account, .footer-container, #osano-cm-window, [data-testid='riotbar'], .riotbar-content-container, " + 
+                     "#riotbar-footer-container, div[data-testid='footer'] " + 
                      "{ display: none !important; } " +
                      "html, body { margin-top: -90px !important; padding-top: 0 !important; background-color: #010a13 !important; } ";
         
@@ -102,12 +103,20 @@ public class PatchNoteActivity extends AppCompatActivity {
                     "  var style = document.createElement('style'); " +
                     "  style.innerHTML = css; " +
                     "  document.head.appendChild(style); " +
-                    "  /* Keep text-based footer hiding as it was working */ " +
+                    "  /* Robust Text-Based Hiding */ " +
                     "  var elements = document.getElementsByTagName('*'); " +
                     "  for (var i = 0; i < elements.length; i++) { " +
                     "    var el = elements[i]; " +
-                    "    if (el.innerText && (el.innerText === 'A PROPOS DE LEAGUE OF LEGENDS' || el.innerText === 'CONDITIONS D\\'UTILISATION')) { " +
-                    "       el.closest('footer, div[class*=\"footer\"], div[id*=\"footer\"]').style.display = 'none'; " +
+                    "    if (el.innerText) { " +
+                    "       var text = el.innerText.toUpperCase(); " +
+                    "       if (text.includes('ABOUT LEAGUE OF LEGENDS') || text.includes('A PROPOS DE LEAGUE OF LEGENDS') || " +
+                    "           text.includes('HELP US IMPROVE') || text.includes('AIDEZ-NOUS') || " +
+                    "           text.includes('PRIVACY NOTICE') || text.includes('POLITIQUE DE CONFIDENTIALITE')) { " +
+                    "           var target = el.closest('footer'); " +
+                    "           if (!target) target = el.closest('div[id*=\"footer\"]'); " +
+                    "           if (!target) target = el.closest('div[class*=\"footer\"]'); " +
+                    "           if (target) { target.style.display = 'none'; target.style.visibility = 'hidden'; } " +
+                    "       } " +
                     "    } " +
                     "  } " +
                     "}, 500);"; 

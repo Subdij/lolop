@@ -190,9 +190,9 @@
         android:clipToPadding="false"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="80dp"
+        android:paddingBottom="@dimen/champion_list_bottom_padding"
         android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="100dp"
+        android:fadingEdgeLength="@dimen/fading_edge_length"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -200,7 +200,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/lol_blue_dark"
+        android:background="@drawable/bg_bottom_nav"
         app:itemIconTint="@color/lol_gold"
         app:itemTextColor="@color/lol_gold"
         app:menu="@menu/bottom_nav_menu" />

@@ -20,8 +20,29 @@
             android:layout_height="wrap_content"
             android:background="@color/lol_blue_deep"
             android:orientation="vertical"
-            android:paddingTop="16dp"
             android:paddingBottom="16dp">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/ivShopHeader"
+                    android:layout_width="430dp"
+                    android:layout_height="188dp"
+                    android:layout_marginLeft="-9dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/shop_header"
+                    tools:ignore="ContentDescription" />
+
+                <View
+                    android:layout_width="430dp"
+                    android:layout_height="80dp"
+                    android:layout_marginLeft="-9dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/gradient_fade_bottom" />
+            </FrameLayout>
 
             <EditText
                 android:id="@+id/etSearchItems"
@@ -59,7 +80,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/lol_blue_dark"
+        android:background="@drawable/bg_bottom_nav"
         app:itemIconTint="@color/lol_gold"
         app:itemTextColor="@color/lol_gold"
         app:menu="@menu/bottom_nav_menu" />
@@ -129,13 +150,21 @@
 
                     <TextView
                         android:id="@+id/tvOverlayTitle"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
+                        android:layout_toEndOf="@id/btnInfoOverlay"
+                        android:layout_toStartOf="@id/btnCloseOverlay"
+                        android:layout_centerVertical="true"
+                        android:gravity="center"
                         android:text="Category Title"
                         android:textColor="@color/lol_gold"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="12sp"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeStepGranularity="1sp" />
 
                     <ImageView
                         android:id="@+id/btnCloseOverlay"

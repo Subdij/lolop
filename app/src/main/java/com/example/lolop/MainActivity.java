@@ -23,7 +23,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import android.content.Context;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private ActivityMainBinding binding;
     private ChampionAdapter adapter;
@@ -133,6 +133,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupStickyAnimation() {
         binding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            // Disable complex animation calculation in power saving mode to save CPU
+            if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+                return;
+            }
+            
             float totalScrollRange = appBarLayout.getTotalScrollRange();
             if (totalScrollRange == 0) return;
 

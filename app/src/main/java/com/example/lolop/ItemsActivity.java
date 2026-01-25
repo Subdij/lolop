@@ -34,7 +34,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapter.OnItemClickListener, com.example.lolop.adapter.GridItemAdapter.OnItemClickListener {
+public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.OnItemClickListener, com.example.lolop.adapter.GridItemAdapter.OnItemClickListener {
 
     private ActivityItemsBinding binding;
     private CategoryAdapter categoryAdapter;
@@ -137,26 +137,26 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
 
     private final Map<String, String> preferredCategoryImages = new HashMap<>();
     private void setupPreferredImages() {
-        preferredCategoryImages.put(getString(R.string.cat_ad), "Épée longue"); // Using implicit internal map, but keys are display
-        preferredCategoryImages.put(getString(R.string.cat_ap), "Coiffe de Rabadon");
-        preferredCategoryImages.put(getString(R.string.cat_health), "Cristal de rubis");
-        preferredCategoryImages.put(getString(R.string.cat_armor_pen), "Dernier souffle");
-        preferredCategoryImages.put(getString(R.string.cat_magic_pen), "Joyau putréfiant");
-        preferredCategoryImages.put(getString(R.string.cat_life_steal), "Soif-de-sang");
-        preferredCategoryImages.put(getString(R.string.cat_health_regen), "Armure de Warmog");
-        preferredCategoryImages.put(getString(R.string.cat_speed_no_boots), "Plaque de lune ailée");
-        preferredCategoryImages.put(getString(R.string.cat_tenacity), "Gage de Sterak");
-        preferredCategoryImages.put(getString(R.string.cat_active), "Sablier de Zhonya");
-        preferredCategoryImages.put(getString(R.string.cat_aura), "Égide solaire");
-        preferredCategoryImages.put(getString(R.string.cat_on_hit), "Tueur de krakens");
-        preferredCategoryImages.put(getString(R.string.cat_jungle), "Bébé Ixamandre");
-        preferredCategoryImages.put(getString(R.string.cat_omnivamp), "Créateur de failles");
-        preferredCategoryImages.put(getString(R.string.cat_anti_heal), "Morellonomicon");
-        preferredCategoryImages.put(getString(R.string.cat_anti_shield), "Crochet de serpent");
-        preferredCategoryImages.put(getString(R.string.cat_lethality), "Dague dentelée");
-        preferredCategoryImages.put(getString(R.string.cat_spellblade), "Brillance");
-        preferredCategoryImages.put(getString(R.string.cat_lifeline), "Arc-bouclier immortel");
-        preferredCategoryImages.put(getString(R.string.cat_shield), "Médaillon de l'Iron Solari");
+        preferredCategoryImages.put(getString(R.string.cat_ad), "1036");           // Long Sword
+        preferredCategoryImages.put(getString(R.string.cat_ap), "3089");           // Rabadon's Deathcap
+        preferredCategoryImages.put(getString(R.string.cat_health), "1028");       // Ruby Crystal
+        preferredCategoryImages.put(getString(R.string.cat_armor_pen), "3035");    // Last Whisper
+        preferredCategoryImages.put(getString(R.string.cat_magic_pen), "4630");    // Blighting Jewel
+        preferredCategoryImages.put(getString(R.string.cat_life_steal), "3072");   // Bloodthirster
+        preferredCategoryImages.put(getString(R.string.cat_health_regen), "3083"); // Warmog's Armor
+        preferredCategoryImages.put(getString(R.string.cat_speed_no_boots), "3066"); // Winged Moonplate
+        preferredCategoryImages.put(getString(R.string.cat_tenacity), "3053");     // Sterak's Gage
+        preferredCategoryImages.put(getString(R.string.cat_active), "3157");       // Zhonya's Hourglass
+        preferredCategoryImages.put(getString(R.string.cat_aura), "3068");         // Sunfire Aegis
+        preferredCategoryImages.put(getString(R.string.cat_on_hit), "6672");       // Kraken Slayer
+        preferredCategoryImages.put(getString(R.string.cat_jungle), "1103");       // Mosstomper Seedling
+        preferredCategoryImages.put(getString(R.string.cat_omnivamp), "4633");     // Riftmaker
+        preferredCategoryImages.put(getString(R.string.cat_anti_heal), "3165");    // Morellonomicon
+        preferredCategoryImages.put(getString(R.string.cat_anti_shield), "6695");  // Serpent's Fang
+        preferredCategoryImages.put(getString(R.string.cat_lethality), "3134");    // Serrated Dirk
+        preferredCategoryImages.put(getString(R.string.cat_spellblade), "3057");   // Sheen
+        preferredCategoryImages.put(getString(R.string.cat_lifeline), "6673");     // Immortal Shieldbow
+        preferredCategoryImages.put(getString(R.string.cat_shield), "3190");       // Locket of the Iron Solari
     }
 
     private final Map<String, String> categoryDescriptions = new HashMap<>();
@@ -304,9 +304,14 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
              rvOverlayItems.setAdapter(null);
         }
 
-        overlayContainer.setVisibility(View.VISIBLE);
-        overlayContainer.setAlpha(0f);
-        overlayContainer.animate().alpha(1f).setDuration(200).start();
+        if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+            overlayContainer.setVisibility(View.VISIBLE);
+            overlayContainer.setAlpha(1f);
+        } else {
+            overlayContainer.setVisibility(View.VISIBLE);
+            overlayContainer.setAlpha(0f);
+            overlayContainer.animate().alpha(1f).setDuration(200).start();
+        }
         
         // Disable scrolling on the main list
         binding.rvCategories.setNestedScrollingEnabled(false);
@@ -321,9 +326,14 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
         binding.rvCategories.setNestedScrollingEnabled(true);
         // binding.rvCategories.suppressLayout(false);
 
-        overlayContainer.animate().alpha(0f).setDuration(200).withEndAction(() -> 
-            overlayContainer.setVisibility(View.GONE)
-        ).start();
+        if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+            overlayContainer.setVisibility(View.GONE);
+            binding.rvCategories.setNestedScrollingEnabled(true);
+        } else {
+            overlayContainer.animate().alpha(0f).setDuration(200).withEndAction(() -> 
+                overlayContainer.setVisibility(View.GONE)
+            ).start();
+        }
     }
     
     private boolean isOverlayVisible() {
@@ -703,14 +713,14 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
                 
                 // Check for preferred custom image
                 if (preferredCategoryImages.containsKey(header)) {
-                    String preferredName = preferredCategoryImages.get(header);
+                    String preferredId = preferredCategoryImages.get(header);
                     // Search in ALL items to find the preferred one, not just this category's items 
                     // (though it likely should be in this category, scanning global sorted set is safer if we want strict match)
                     // For improved performance, we check items in this category first.
                     
                     boolean found = false;
                     for (Item item : items) {
-                         if (item.getName() != null && item.getName().equalsIgnoreCase(preferredName)) {
+                         if (item.getId() != null && item.getId().equals(preferredId)) {
                              repItem = item;
                              found = true;
                              break;
@@ -720,7 +730,7 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
                     if (!found) {
                         // Fallback: search in all sortedItems if not found in category (rare case)
                          for (Item item : sortedItems) { // sortedItems is available in this scope
-                             if (item.getName() != null && item.getName().equalsIgnoreCase(preferredName)) {
+                             if (item.getId() != null && item.getId().equals(preferredId)) {
                                  repItem = item;
                                  break;
                              }
