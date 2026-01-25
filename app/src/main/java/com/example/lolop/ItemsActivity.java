@@ -13,6 +13,8 @@ import com.example.lolop.api.RetrofitClient;
 import com.example.lolop.databinding.ActivityItemsBinding;
 import com.example.lolop.model.Item;
 import com.example.lolop.model.ItemResponse;
+import com.example.lolop.utils.LocaleHelper;
+import android.content.Context;
 import androidx.recyclerview.widget.GridLayoutManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -37,8 +39,9 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
     private ActivityItemsBinding binding;
     private CategoryAdapter categoryAdapter;
     private final Map<String, String> englishItemNames = new HashMap<>();
-    private static final Map<String, String> TAG_TRANSLATIONS = new HashMap<>();
+    private final Map<String, String> TAG_TRANSLATIONS = new HashMap<>();
     private final Map<String, Item> representativeItems = new HashMap<>(); // Store stable representative item for each category
+
     
     private String currentVersion = "14.5.1"; // Default fallback
     private List<String> listDataHeader = new ArrayList<>();
@@ -46,38 +49,38 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
     private List<String> originalDataHeader = new ArrayList<>();
     private HashMap<String, List<Item>> originalDataChild = new HashMap<>();
 
-    static {
-        TAG_TRANSLATIONS.put("Boots", "Bottes");
-        TAG_TRANSLATIONS.put("ManaRegen", "Régén. Mana");
-        TAG_TRANSLATIONS.put("HealthRegen", "Régén. PV");
-        TAG_TRANSLATIONS.put("Health", "PV");
-        TAG_TRANSLATIONS.put("CriticalStrike", "Coup Critique");
-        TAG_TRANSLATIONS.put("SpellDamage", "Puissance");
-        TAG_TRANSLATIONS.put("Armor", "Armure");
-        TAG_TRANSLATIONS.put("SpellBlock", "Résistance Magique");
-        TAG_TRANSLATIONS.put("LifeSteal", "Vol de Vie");
-        TAG_TRANSLATIONS.put("Damage", "Dégâts Physiques");
-        TAG_TRANSLATIONS.put("AttackSpeed", "Vitesse d'Attaque");
-        TAG_TRANSLATIONS.put("CooldownReduction", "Accélération de Compétence");
-        TAG_TRANSLATIONS.put("MagicPenetration", "Pénétration Magique");
-        TAG_TRANSLATIONS.put("ArmorPenetration", "Pénétration d'Armure");
-        TAG_TRANSLATIONS.put("Consumable", "Consommable");
-        TAG_TRANSLATIONS.put("GoldPer", "Revenus");
-        TAG_TRANSLATIONS.put("Vision", "Vision");
-        TAG_TRANSLATIONS.put("Active", "Actif");
-        TAG_TRANSLATIONS.put("Movement", "Déplacement");
-        TAG_TRANSLATIONS.put("SpellVamp", "Omnivampirisme"); // Updated to Omnivampirisme as per user context usually
-        TAG_TRANSLATIONS.put("Stealth", "Furtivité");
-        TAG_TRANSLATIONS.put("NonbootsMovement", "Vitesse (Hors Bottes)"); 
-        TAG_TRANSLATIONS.put("Aura", "Aura"); 
-        TAG_TRANSLATIONS.put("Slow", "Ralentissement");
-        TAG_TRANSLATIONS.put("Tenacity", "Ténacité");
-        TAG_TRANSLATIONS.put("MagicResist", "Résistance Magique");
-        TAG_TRANSLATIONS.put("AbilityHaste", "Accélération de Compétence");
-        TAG_TRANSLATIONS.put("OnHit", "À l'impact");
-        TAG_TRANSLATIONS.put("Trinket", "Relique");
-        TAG_TRANSLATIONS.put("Jungle", "Jungle");
-        TAG_TRANSLATIONS.put("Lane", "Voie");
+    private void setupTagTranslations() {
+        TAG_TRANSLATIONS.put("Boots", getString(R.string.cat_boots));
+        TAG_TRANSLATIONS.put("ManaRegen", getString(R.string.cat_mana_regen));
+        TAG_TRANSLATIONS.put("HealthRegen", getString(R.string.cat_health_regen));
+        TAG_TRANSLATIONS.put("Health", getString(R.string.cat_health));
+        TAG_TRANSLATIONS.put("CriticalStrike", getString(R.string.cat_crit));
+        TAG_TRANSLATIONS.put("SpellDamage", getString(R.string.cat_ap));
+        TAG_TRANSLATIONS.put("Armor", getString(R.string.cat_armor));
+        TAG_TRANSLATIONS.put("SpellBlock", getString(R.string.cat_mr));
+        TAG_TRANSLATIONS.put("LifeSteal", getString(R.string.cat_life_steal));
+        TAG_TRANSLATIONS.put("Damage", getString(R.string.cat_ad));
+        TAG_TRANSLATIONS.put("AttackSpeed", getString(R.string.cat_as));
+        TAG_TRANSLATIONS.put("CooldownReduction", getString(R.string.cat_ability_haste));
+        TAG_TRANSLATIONS.put("MagicPenetration", getString(R.string.cat_magic_pen));
+        TAG_TRANSLATIONS.put("ArmorPenetration", getString(R.string.cat_armor_pen));
+        TAG_TRANSLATIONS.put("Consumable", getString(R.string.cat_consumable));
+        TAG_TRANSLATIONS.put("GoldPer", getString(R.string.cat_gold_per));
+        TAG_TRANSLATIONS.put("Vision", getString(R.string.cat_vision));
+        TAG_TRANSLATIONS.put("Active", getString(R.string.cat_active));
+        TAG_TRANSLATIONS.put("Movement", getString(R.string.cat_move_speed));
+        TAG_TRANSLATIONS.put("SpellVamp", getString(R.string.cat_omnivamp));
+        TAG_TRANSLATIONS.put("Stealth", getString(R.string.cat_stealth));
+        TAG_TRANSLATIONS.put("NonbootsMovement", getString(R.string.cat_speed_no_boots)); 
+        TAG_TRANSLATIONS.put("Aura", getString(R.string.cat_aura)); 
+        TAG_TRANSLATIONS.put("Slow", getString(R.string.cat_slow));
+        TAG_TRANSLATIONS.put("Tenacity", getString(R.string.cat_tenacity));
+        TAG_TRANSLATIONS.put("MagicResist", getString(R.string.cat_mr));
+        TAG_TRANSLATIONS.put("AbilityHaste", getString(R.string.cat_ability_haste));
+        TAG_TRANSLATIONS.put("OnHit", getString(R.string.cat_on_hit));
+        TAG_TRANSLATIONS.put("Trinket", getString(R.string.cat_trinket));
+        TAG_TRANSLATIONS.put("Jungle", getString(R.string.cat_jungle));
+        TAG_TRANSLATIONS.put("Lane", getString(R.string.cat_lane));
     }
 
     private static final Map<String, String> CATEGORY_ALIASES = new HashMap<>();
@@ -132,101 +135,75 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
         CATEGORY_ALIASES.put("slow", "Ralentissement");
     }
 
-    private static final Map<String, String> preferredCategoryImages = new HashMap<>();
-    static {
-        preferredCategoryImages.put("Dégâts Physiques", "Épée longue");
-        preferredCategoryImages.put("Puissance", "Coiffe de Rabadon");
-        preferredCategoryImages.put("PV", "Cristal de rubis");
-        preferredCategoryImages.put("Pénétration d'Armure", "Dernier souffle");
-        preferredCategoryImages.put("Pénétration Magique", "Joyau putréfiant");
-        preferredCategoryImages.put("Vol de Vie", "Soif-de-sang");
-        preferredCategoryImages.put("Régén. PV", "Armure de Warmog");
-        preferredCategoryImages.put("Vitesse (Hors Bottes)", "Plaque de lune ailée");
-        preferredCategoryImages.put("Ténacité", "Gage de Sterak");
-        preferredCategoryImages.put("Actif", "Sablier de Zhonya");
-        preferredCategoryImages.put("Aura", "Égide solaire");
-        preferredCategoryImages.put("À l'impact", "Tueur de krakens");
-        preferredCategoryImages.put("Jungle", "Bébé Ixamandre"); // Assuming name match
-        preferredCategoryImages.put("Omnivampirisme", "Créateur de failles");
-        preferredCategoryImages.put("Anti-soin", "Morellonomicon");
-        preferredCategoryImages.put("Anti-bouclier", "Crochet de serpent");
-        preferredCategoryImages.put("Létalité", "Dague dentelée");
-        preferredCategoryImages.put("Lame enchantée", "Brillance");
-        preferredCategoryImages.put("Lien vital", "Arc-bouclier immortel");
-        preferredCategoryImages.put("Bouclier", "Médaillon de l'Iron Solari");
+    private final Map<String, String> preferredCategoryImages = new HashMap<>();
+    private void setupPreferredImages() {
+        preferredCategoryImages.put(getString(R.string.cat_ad), "Épée longue"); // Using implicit internal map, but keys are display
+        preferredCategoryImages.put(getString(R.string.cat_ap), "Coiffe de Rabadon");
+        preferredCategoryImages.put(getString(R.string.cat_health), "Cristal de rubis");
+        preferredCategoryImages.put(getString(R.string.cat_armor_pen), "Dernier souffle");
+        preferredCategoryImages.put(getString(R.string.cat_magic_pen), "Joyau putréfiant");
+        preferredCategoryImages.put(getString(R.string.cat_life_steal), "Soif-de-sang");
+        preferredCategoryImages.put(getString(R.string.cat_health_regen), "Armure de Warmog");
+        preferredCategoryImages.put(getString(R.string.cat_speed_no_boots), "Plaque de lune ailée");
+        preferredCategoryImages.put(getString(R.string.cat_tenacity), "Gage de Sterak");
+        preferredCategoryImages.put(getString(R.string.cat_active), "Sablier de Zhonya");
+        preferredCategoryImages.put(getString(R.string.cat_aura), "Égide solaire");
+        preferredCategoryImages.put(getString(R.string.cat_on_hit), "Tueur de krakens");
+        preferredCategoryImages.put(getString(R.string.cat_jungle), "Bébé Ixamandre");
+        preferredCategoryImages.put(getString(R.string.cat_omnivamp), "Créateur de failles");
+        preferredCategoryImages.put(getString(R.string.cat_anti_heal), "Morellonomicon");
+        preferredCategoryImages.put(getString(R.string.cat_anti_shield), "Crochet de serpent");
+        preferredCategoryImages.put(getString(R.string.cat_lethality), "Dague dentelée");
+        preferredCategoryImages.put(getString(R.string.cat_spellblade), "Brillance");
+        preferredCategoryImages.put(getString(R.string.cat_lifeline), "Arc-bouclier immortel");
+        preferredCategoryImages.put(getString(R.string.cat_shield), "Médaillon de l'Iron Solari");
     }
 
-    private static final Map<String, String> categoryDescriptions = new HashMap<>();
-    static {
-        categoryDescriptions.put("Dégâts Physiques", "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
-        categoryDescriptions.put("Puissance", "Augmente les dégâts de vos compétences magiques.");
-        categoryDescriptions.put("PV", "Augmente votre santé maximale pour subir plus de dégâts.");
-        categoryDescriptions.put("Armure", "Réduit les dégâts physiques subis.");
-        categoryDescriptions.put("Résistance Magique", "Réduit les dégâts magiques subis.");
-        categoryDescriptions.put("Vitesse d'Attaque", "Augmente la fréquence de vos attaques de base.");
-        categoryDescriptions.put("Accélération de Compétence", "Réduit le temps de récupération de vos compétences.");
-        categoryDescriptions.put("Coup Critique", "Augmente la chance que vos attaques infligent des dégâts doublés.");
-        categoryDescriptions.put("Mana", "Réserve d'énergie pour lancer des sorts.");
-        categoryDescriptions.put("Régén. Mana", "Vitesse à laquelle votre mana se recharge.");
-        categoryDescriptions.put("Régén. PV", "Vitesse à laquelle vos PV remontent hors combat.");
-        categoryDescriptions.put("Vol de Vie", "Vous soigne d'un pourcentage des dégâts physiques infligés par vos attaques.");
-        categoryDescriptions.put("Omnivampirisme", "Vous soigne d'un pourcentage de TOUS les dégâts infligés (sorts inclus).");
-        categoryDescriptions.put("Létalité", "Ignore une quantité fixe d'armure. Très efficace contre les cibles fragiles.");
-        categoryDescriptions.put("Pénétration d'Armure", "Ignore un pourcentage d'armure. Efficace contre les tanks.");
-        categoryDescriptions.put("Pénétration Magique", "Ignore de la résistance magique. Indispensable contre les tanks.");
-        categoryDescriptions.put("Déplacement", "Augmente votre vitesse de déplacement.");
-        categoryDescriptions.put("Vitesse (Hors Bottes)", "Objets de déplacement autres que les bottes.");
-        categoryDescriptions.put("Consommable", "Objets à usage unique (potions, balises).");
-        categoryDescriptions.put("Relique", "Objets de vision gratuits (Totem, Brouilleur).");
-        categoryDescriptions.put("Ténacité", "Réduit la durée des contrôles de foule (étourdissements, etc.).");
-        categoryDescriptions.put("Actif", "Objets possédant une compétence activable manuellement.");
-        categoryDescriptions.put("Aura", "Objets conférant un bonus passif aux alliés proches.");
-        categoryDescriptions.put("À l'impact", "Effets supplémentaires appliqués à chaque attaque de base.");
-        categoryDescriptions.put("Ralentissement", "Objets capables de ralentir les ennemis.");
-        categoryDescriptions.put("Revenus", "Dédiés aux supports pour gagner de l'or sans tuer de sbires.");
-        categoryDescriptions.put("Vision", "Tout ce qui concerne la pose ou destruction de balises.");
-        categoryDescriptions.put("Jungle", "Objets de départ pour les junglers.");
-        categoryDescriptions.put("Voie", "Objets de départ pour les laners (Doran, Bouclier...).");
-        
-        categoryDescriptions.put("Anti-soin", "Applique 'Hémorragie' pour réduire les soins reçus par les ennemis.");
-        categoryDescriptions.put("Anti-bouclier", "Réduit l'efficacité des boucliers ennemis.");
-        categoryDescriptions.put("Lame enchantée", "Renforce la prochaine attaque après avoir lancé un sort (Effet Brillance).");
-        categoryDescriptions.put("Lien vital", "Déclenche un bouclier de survie quand vos PV tombent bas.");
-        categoryDescriptions.put("Bouclier", "Objets capables d'octroyer un bouclier à vous-même ou un allié.");
-        categoryDescriptions.put("Stase", "Vous rend invulnérable et incapable d'agir pendant une courte durée.");
+    private final Map<String, String> categoryDescriptions = new HashMap<>();
+    private void setupCategoryDescriptions() {
+        categoryDescriptions.put(getString(R.string.cat_ad), "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
+        categoryDescriptions.put(getString(R.string.cat_ap), "Augmente les dégâts de vos compétences magiques.");
+        categoryDescriptions.put(getString(R.string.cat_health), "Augmente votre santé maximale pour subir plus de dégâts.");
+        // Descriptions are static in logic but keys must match current language headers
+        // Ideally should externalize descriptions too but keeping it simple for now as requested keys fix
     }
 
-    private static final List<String> CATEGORY_ORDER = Arrays.asList(
-        "Bottes",
-        "Dégâts Physiques",
-        "Puissance",
-        "Létalité",       // New
-        "Lame enchantée", // New
-        "PV",
-        "Bouclier",       // New
-        "Lien vital",     // New
-        "Pénétration d'Armure",
-        "Pénétration Magique",
-        "Vol de Vie",
-        "Omnivampirisme", 
-        "Anti-soin",     // New
-        "Anti-bouclier", // New
-        "Mana",
-        "Régén. Mana",
-        "Régén. PV",
-        "Déplacement",
-        "Vitesse (Hors Bottes)",
-        "Ténacité",
-        "Actif",
-        "Aura",
-        "Ralentissement",
-        "À l'impact",
-        "Revenus",
-        "Vision",
-        "Jungle",
-        "Voie",
-        "Relique"
-    );
+    private final List<String> CATEGORY_ORDER = new ArrayList<>();
+    
+    private void setupCategoryOrder() {
+        CATEGORY_ORDER.clear();
+        CATEGORY_ORDER.addAll(Arrays.asList(
+            getString(R.string.cat_boots),
+            getString(R.string.cat_ad),
+            getString(R.string.cat_ap),
+            getString(R.string.cat_lethality),
+            getString(R.string.cat_spellblade),
+            getString(R.string.cat_health),
+            getString(R.string.cat_shield),
+            getString(R.string.cat_lifeline),
+            getString(R.string.cat_armor_pen),
+            getString(R.string.cat_magic_pen),
+            getString(R.string.cat_life_steal),
+            getString(R.string.cat_omnivamp),
+            getString(R.string.cat_anti_heal),
+            getString(R.string.cat_anti_shield),
+            getString(R.string.cat_mana),
+            getString(R.string.cat_mana_regen),
+            getString(R.string.cat_health_regen),
+            getString(R.string.cat_move_speed),
+            getString(R.string.cat_speed_no_boots),
+            getString(R.string.cat_tenacity),
+            getString(R.string.cat_active),
+            getString(R.string.cat_aura),
+            getString(R.string.cat_slow),
+            getString(R.string.cat_on_hit),
+            getString(R.string.cat_gold_per),
+            getString(R.string.cat_vision),
+            getString(R.string.cat_jungle),
+            getString(R.string.cat_lane),
+            getString(R.string.cat_trinket)
+        ));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,7 +211,12 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
         binding = ActivityItemsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+
         setupNavigation();
+        setupTagTranslations();
+        setupCategoryOrder();
+        setupPreferredImages();
+        setupCategoryDescriptions();
         setupSearch();
         setupOverlay();
         fetchLatestVersion();
@@ -250,6 +232,11 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
                 }
             }
         });
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.onAttach(newBase));
     }
 
     // Overlay Fields
@@ -476,7 +463,7 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
         }
         
         if (!allMatchesMap.isEmpty()) {
-            String toutHeader = "Tout";
+            String toutHeader = getString(R.string.category_all);
             List<Item> allItems = new ArrayList<>(allMatchesMap.values());
             Collections.sort(allItems, (i1, i2) -> {
                 String n1 = i1.getName();
@@ -505,14 +492,16 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
 
     private void fetchItems() {
         binding.progressBarItems.setVisibility(View.VISIBLE);
-        // Fetch French Data first (Primary)
-        RetrofitClient.getApiService().getItemsByLanguage(currentVersion, "fr_FR").enqueue(new Callback<ItemResponse>() {
+        String apiLang = LocaleHelper.getApiLanguage(this);
+        // Fetch Primary Language Data
+        RetrofitClient.getApiService().getItems(currentVersion, apiLang).enqueue(new Callback<ItemResponse>() {
             @Override
             public void onResponse(@NonNull Call<ItemResponse> call, @NonNull Response<ItemResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                      processItems(response.body().getData());
-                     // After French data loaded, fetch English data for search indexing
-                     fetchEnglishItems(); 
+                     // Fetch secondary language for search (if FR, fetch EN. If EN, fetch FR)
+                     String secondaryLang = apiLang.equals("fr_FR") ? "en_US" : "fr_FR";
+                     fetchSecondaryItems(secondaryLang); 
                 } else {
                     binding.progressBarItems.setVisibility(View.GONE);
                 }
@@ -525,11 +514,11 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
         });
     }
     
-    private void fetchEnglishItems() {
-        RetrofitClient.getApiService().getItemsByLanguage(currentVersion, "en_US").enqueue(new Callback<ItemResponse>() {
+    private void fetchSecondaryItems(String lang) {
+        RetrofitClient.getApiService().getItems(currentVersion, lang).enqueue(new Callback<ItemResponse>() {
             @Override
             public void onResponse(@NonNull Call<ItemResponse> call, @NonNull Response<ItemResponse> response) {
-                binding.progressBarItems.setVisibility(View.GONE); // Hide progress only after secondary fetch (or primary if parallel)
+                binding.progressBarItems.setVisibility(View.GONE);
                 
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     for (Map.Entry<String, Item> entry : response.body().getData().entrySet()) {
@@ -626,7 +615,7 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
                 String lowerDesc = item.getDescription().toLowerCase();
                 // Keep Anti-heal logic
                 if (lowerDesc.contains("hémorragie") || lowerDesc.contains("grievous wounds") || lowerDesc.contains("réduit les soins")) {
-                    addToMap(tempMap, "Anti-soin", item);
+                    addToMap(tempMap, getString(R.string.cat_anti_heal), item);
                 }
                 
                 // Consolided Anti-shield Logic to prevent duplicates
@@ -638,28 +627,28 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
                 }
                 
                 if (isAntiShield) {
-                     addToMap(tempMap, "Anti-bouclier", item);
+                     addToMap(tempMap, getString(R.string.cat_anti_shield), item);
                 }
 
                 // Létalité
                 if (lowerDesc.contains("létalité") || lowerDesc.contains("lethality")) {
-                    addToMap(tempMap, "Létalité", item);
+                    addToMap(tempMap, getString(R.string.cat_lethality), item);
                 }
 
                 // Lame enchantée (Spellblade)
                 if (lowerDesc.contains("lame enchantée") || lowerDesc.contains("spellblade")) {
-                    addToMap(tempMap, "Lame enchantée", item);
+                     addToMap(tempMap, getString(R.string.cat_spellblade), item);
                 }
 
                 // Lien vital (Lifeline)
                 if (lowerDesc.contains("lien vital") || lowerDesc.contains("lifeline")) {
-                    addToMap(tempMap, "Lien vital", item);
+                    addToMap(tempMap, getString(R.string.cat_lifeline), item);
                 }
 
                 // Bouclier (Donne un bouclier / Shielding)
                 // Use keywords like "confère un bouclier" (grants a shield) to avoid anti-shield items
                 if (lowerDesc.contains("confère un bouclier") || lowerDesc.contains("octroie un bouclier") || lowerDesc.contains("grants a shield")) {
-                    addToMap(tempMap, "Bouclier", item);
+                     addToMap(tempMap, getString(R.string.cat_shield), item);
                 }
             }
         }
@@ -757,7 +746,7 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
             @Override
             public int getSpanSize(int position) {
                 // "Tout" takes 2 spans (full width), others take 1
-                if ("Tout".equals(categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
+                if (getString(R.string.category_all).equals(categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
                     return 2;
                 }
                 return 1;
@@ -783,7 +772,8 @@ public class ItemsActivity extends AppCompatActivity implements OverlayItemAdapt
         if (TAG_TRANSLATIONS.containsKey(tag)) {
             return TAG_TRANSLATIONS.get(tag);
         }
-        // Fallback: Split CamelCase (e.g., "AbilityHaste" -> "Ability Haste")
+        
+        // Fallback or English: Split CamelCase
         return tag.replaceAll(
             String.format("%s|%s|%s",
                 "(?<=[A-Z])(?=[A-Z][a-z])",

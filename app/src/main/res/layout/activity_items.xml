@@ -30,7 +30,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"
                 android:background="@drawable/search_bar_background"
-                android:hint="Rechercher un objet..."
+                android:hint="@string/search_item_hint"
                 android:padding="12dp"
                 android:textColor="@color/white"
                 android:textColorHint="@color/lol_silver"
