@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">lolop</string>
+    <string name="search_item_hint">Rechercher des objets...</string>
+    <string name="search_champion_hint">Rechercher des champions...</string>
+    <string name="menu_champions">Champions</string>
+    <string name="menu_items">Objets</string>
+    <string name="menu_patch_note">Notes de patch</string>
+    <string name="category_all">Tout</string>
+
+    <string name="cat_boots">Bottes</string>
+    <string name="cat_mana">Mana</string>
+    <string name="cat_mana_regen">Régén. Mana</string>
+    <string name="cat_health_regen">Régén. PV</string>
+    <string name="cat_health">PV</string>
+    <string name="cat_crit">Coup Critique</string>
+    <string name="cat_ap">Puissance</string>
+    <string name="cat_armor">Armure</string>
+    <string name="cat_mr">Résistance Magique</string>
+    <string name="cat_life_steal">Vol de Vie</string>
+    <string name="cat_ad">Dégâts Physiques</string>
+    <string name="cat_as">Vitesse d\'Attaque</string>
+    <string name="cat_ability_haste">Accélération de Compétence</string>
+    <string name="cat_magic_pen">Pénétration Magique</string>
+    <string name="cat_armor_pen">Pénétration d\'Armure</string>
+    <string name="cat_consumable">Consommable</string>
+    <string name="cat_gold_per">Revenus</string>
+    <string name="cat_vision">Vision</string>
+    <string name="cat_active">Actif</string>
+    <string name="cat_move_speed">Déplacement</string>
+    <string name="cat_omnivamp">Omnivampirisme</string>
+    <string name="cat_stealth">Furtivité</string>
+    <string name="cat_speed_no_boots">Vitesse (Hors Bottes)</string>
+    <string name="cat_aura">Aura</string>
+    <string name="cat_slow">Ralentissement</string>
+    <string name="cat_tenacity">Ténacité</string>
+    <string name="cat_on_hit">À l\'impact</string>
+    <string name="cat_trinket">Relique</string>
+    <string name="cat_jungle">Jungle</string>
+    <string name="cat_lane">Voie</string>
+    
+    <string name="cat_anti_heal">Anti-soin</string>
+    <string name="cat_anti_shield">Anti-bouclier</string>
+    <string name="cat_lethality">Létalité</string>
+    <string name="cat_spellblade">Lame enchantée</string>
+    <string name="cat_lifeline">Lien vital</string>
+    <string name="cat_shield">Bouclier</string>
+</resources>

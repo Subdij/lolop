@@ -1,11 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LoL OP</string>
-    <string name="welcome_back">Content de vous revoir ! Dernier champion : %s</string>
-    <string name="error_loading">Erreur lors du chargement des champions</string>
-    <string name="random_pick">Champion aléatoire : %s</string>
-    <string name="history_title">Histoire</string>
-    <string name="spells_title">Compétences</string>
-    <string name="build_title">Build Populaire S14</string>
-    <string name="mana_low_title">Mana Faible !</string>
-    <string name="mana_low_desc">Invocateur, votre batterie est basse. Finissez vite votre recherche !</string>
+    <string name="app_name">lolop</string>
+    <string name="search_item_hint">Search items...</string>
+    <string name="search_champion_hint">Search champions...</string>
+    <string name="menu_champions">Champions</string>
+    <string name="menu_items">Items</string>
+    <string name="menu_patch_note">Patch Notes</string>
+    <string name="category_all">All</string>
+
+    <string name="cat_boots">Boots</string>
+    <string name="cat_mana">Mana</string>
+    <string name="cat_mana_regen">Mana Regen</string>
+    <string name="cat_health_regen">Health Regen</string>
+    <string name="cat_health">Health</string>
+    <string name="cat_crit">Critical Strike</string>
+    <string name="cat_ap">Ability Power</string>
+    <string name="cat_armor">Armor</string>
+    <string name="cat_mr">Magic Resist</string>
+    <string name="cat_life_steal">Life Steal</string>
+    <string name="cat_ad">Attack Damage</string>
+    <string name="cat_as">Attack Speed</string>
+    <string name="cat_ability_haste">Ability Haste</string>
+    <string name="cat_magic_pen">Magic Penetration</string>
+    <string name="cat_armor_pen">Armor Penetration</string>
+    <string name="cat_consumable">Consumable</string>
+    <string name="cat_gold_per">Gold Income</string>
+    <string name="cat_vision">Vision</string>
+    <string name="cat_active">Active</string>
+    <string name="cat_move_speed">Movement Speed</string>
+    <string name="cat_omnivamp">Omnivamp</string>
+    <string name="cat_stealth">Stealth</string>
+    <string name="cat_speed_no_boots">Move Speed (Non-Boots)</string>
+    <string name="cat_aura">Aura</string>
+    <string name="cat_slow">Slow</string>
+    <string name="cat_tenacity">Tenacity</string>
+    <string name="cat_on_hit">On-Hit</string>
+    <string name="cat_trinket">Trinket</string>
+    <string name="cat_jungle">Jungle</string>
+    <string name="cat_lane">Lane</string>
+    
+    <string name="cat_anti_heal">Anti-Heal</string>
+    <string name="cat_anti_shield">Anti-Shield</string>
+    <string name="cat_lethality">Lethality</string>
+    <string name="cat_spellblade">Spellblade</string>
+    <string name="cat_lifeline">Lifeline</string>
+    <string name="cat_shield">Shield</string>
 </resources>

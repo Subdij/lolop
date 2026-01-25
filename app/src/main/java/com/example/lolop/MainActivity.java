@@ -14,12 +14,14 @@ import com.example.lolop.database.FavoriteDatabase;
 import com.example.lolop.databinding.ActivityMainBinding;
 import com.example.lolop.model.Champion;
 import com.example.lolop.model.ChampionListResponse;
+import com.example.lolop.utils.LocaleHelper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.content.Context;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,10 +45,17 @@ public class MainActivity extends AppCompatActivity {
         setupSearch();
         setupRoleIcons();
         setupStickyAnimation();
+        setupLanguageButtons();
 
         if (savedInstanceState != null) {
             //noinspection unchecked
             championList = (ArrayList<Champion>) savedInstanceState.getSerializable("CHAMP_LIST");
+            if (savedInstanceState.containsKey("CURRENT_VERSION")) {
+                currentVersion = savedInstanceState.getString("CURRENT_VERSION");
+            }
+            if (adapter != null) {
+                adapter.setVersion(currentVersion);
+            }
             if (championList != null && !championList.isEmpty()) {
                 sortAndDisplayChampions();
             } else {
@@ -55,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             fetchLatestVersion();
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.onAttach(newBase));
     }
 
     private void fetchLatestVersion() {
@@ -77,6 +91,44 @@ public class MainActivity extends AppCompatActivity {
                 fetchChampions(); 
             }
         });
+    }
+
+    private void setupLanguageButtons() {
+        binding.btnLangFr.setOnClickListener(v -> setLanguage("fr"));
+        binding.btnLangEn.setOnClickListener(v -> setLanguage("en"));
+        
+        updateLanguageUI(LocaleHelper.getLanguage(this));
+    }
+
+    private void updateLanguageUI(String currentLanguage) {
+        float activeScale = 1.0f;
+        float inactiveScale = 0.75f;
+        float activeAlpha = 1.0f;
+        float inactiveAlpha = 0.5f;
+
+        if ("fr".equals(currentLanguage)) {
+            binding.btnLangFr.setAlpha(activeAlpha);
+            binding.btnLangFr.setScaleX(activeScale);
+            binding.btnLangFr.setScaleY(activeScale);
+            
+            binding.btnLangEn.setAlpha(inactiveAlpha);
+            binding.btnLangEn.setScaleX(inactiveScale);
+            binding.btnLangEn.setScaleY(inactiveScale);
+        } else {
+            // Default to English if not French
+            binding.btnLangEn.setAlpha(activeAlpha);
+            binding.btnLangEn.setScaleX(activeScale);
+            binding.btnLangEn.setScaleY(activeScale);
+            
+            binding.btnLangFr.setAlpha(inactiveAlpha);
+            binding.btnLangFr.setScaleX(inactiveScale);
+            binding.btnLangFr.setScaleY(inactiveScale);
+        }
+    }
+
+    private void setLanguage(String language) {
+        LocaleHelper.setLocale(this, language);
+        recreate();
     }
 
     private void setupStickyAnimation() {
@@ -149,7 +201,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchChampions() {
         binding.progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().getChampions(currentVersion).enqueue(new Callback<ChampionListResponse>() {
+        String apiLang = LocaleHelper.getApiLanguage(this);
+        RetrofitClient.getApiService().getChampions(currentVersion, apiLang).enqueue(new Callback<ChampionListResponse>() {
             @Override
             public void onResponse(@NonNull Call<ChampionListResponse> call, @NonNull Response<ChampionListResponse> response) {
                 binding.progressBar.setVisibility(View.GONE);
@@ -188,6 +241,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable("CHAMP_LIST", championList);
+        outState.putString("CURRENT_VERSION", currentVersion);
     }
 
     private void setupNavigation() {

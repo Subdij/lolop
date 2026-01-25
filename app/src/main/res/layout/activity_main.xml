@@ -50,7 +50,7 @@
                         android:layout_marginStart="24dp"
                         android:layout_marginEnd="24dp"
                         android:background="@drawable/search_bar_background"
-                        android:hint="Rechercher un champion..."
+                        android:hint="@string/search_champion_hint"
                         android:padding="12dp"
                         android:textColor="@color/white"
                         android:textColorHint="@color/lol_silver"
@@ -145,6 +145,43 @@
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="16dp"
+        android:elevation="10dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/btnLangFr"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/flag_fr"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            app:strokeWidth="2.5dp"
+            app:strokeColor="@color/lol_gold"
+            app:shapeAppearanceOverlay="@style/CircleImageStyle"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/btnLangEn"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/flag_en"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            app:strokeWidth="2.5dp"
+            app:strokeColor="@color/lol_gold"
+            app:shapeAppearanceOverlay="@style/CircleImageStyle"
+            android:clickable="true"
+            android:focusable="true"/>
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChampions"

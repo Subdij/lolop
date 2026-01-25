@@ -10,6 +10,8 @@ import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.OnBackPressedCallback;
 import com.example.lolop.databinding.ActivityPatchNoteBinding;
+import com.example.lolop.utils.LocaleHelper;
+import android.content.Context;
 
 public class PatchNoteActivity extends AppCompatActivity {
 
@@ -43,6 +45,11 @@ public class PatchNoteActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.onAttach(newBase));
+    }
+
     private void setupWebView() {
         WebSettings webSettings = binding.webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -59,14 +66,14 @@ public class PatchNoteActivity extends AppCompatActivity {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 if (failingUrl.equals(constructPatchUrl(currentVersion)) && !failingUrl.contains("tags/patch-notes")) {
-                     view.loadUrl("https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/");
+                     view.loadUrl(getPatchNotesParams(true));
                 }
             }
             
             @Override
             public void onReceivedHttpError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceResponse errorResponse) {
                 if (request.getUrl().toString().equals(constructPatchUrl(currentVersion)) && errorResponse.getStatusCode() == 404) {
-                    view.post(() -> view.loadUrl("https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/"));
+                    view.post(() -> view.loadUrl(getPatchNotesParams(true)));
                 }
             }
 
@@ -109,22 +116,41 @@ public class PatchNoteActivity extends AppCompatActivity {
     }
 
     private void loadPatchNotes() {
-        String url = "https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/";
+        String url = constructPatchUrl(currentVersion);
         binding.webView.loadUrl(url);
     }
 
     private String constructPatchUrl(String version) {
+        return getPatchNotesParams(false);
+    }
+
+    private String getPatchNotesParams(boolean tagsOnly) {
+        String lang = LocaleHelper.getLanguage(this);
+        // Use "en-gb" for English to match EU-style paths often used, or "en-us". 
+        // "en-gb" is generally safer for global consistency with FR structure on LoL site.
+        String region = lang.equals("fr") ? "fr-fr" : "en-gb";
+        String baseUrl = "https://www.leagueoflegends.com/" + region + "/news/";
+        
+        if (tagsOnly) {
+            return baseUrl + "tags/patch-notes/";
+        }
+
         try {
-            String[] parts = version.split("\\.");
+            String[] parts = currentVersion.split("\\.");
             if (parts.length >= 2) {
                 String major = parts[0];
                 String minor = parts[1];
-                return "https://www.leagueoflegends.com/fr-fr/news/game-updates/notes-de-patch-" + major + "-" + minor + "/";
+                
+                if (lang.equals("fr")) {
+                    return baseUrl + "game-updates/notes-de-patch-" + major + "-" + minor + "/";
+                } else {
+                    return baseUrl + "game-updates/patch-" + major + "-" + minor + "-notes/";
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "https://www.leagueoflegends.com/fr-fr/news/tags/patch-notes/";
+        return baseUrl + "tags/patch-notes/";
     }
 
     private void setupNavigation() {
