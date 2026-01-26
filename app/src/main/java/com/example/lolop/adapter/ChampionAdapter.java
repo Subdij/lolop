@@ -22,6 +22,15 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
     private java.util.Set<String> favoriteIds = new java.util.HashSet<>();
     private String currentSearchText = "";
     private String currentRoleFilter = "All";
+    private OnChampionClickListener listener;
+
+    public interface OnChampionClickListener {
+        void onChampionClick(Champion champion);
+    }
+
+    public void setOnChampionClickListener(OnChampionClickListener listener) {
+        this.listener = listener;
+    }
 
     public ChampionAdapter(String version) {
         this.version = version;
@@ -103,6 +112,12 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         } else {
             holder.binding.ivFavoriteStar.setVisibility(View.GONE);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onChampionClick(champion);
+            }
+        });
     }
 
     @Override

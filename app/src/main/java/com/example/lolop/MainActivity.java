@@ -23,7 +23,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import android.content.Context;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements ChampionAdapter.OnChampionClickListener {
 
     private ActivityMainBinding binding;
     private ChampionAdapter adapter;
@@ -217,6 +217,7 @@ public class MainActivity extends BaseActivity {
     private void setupRecyclerView() {
         adapter = new ChampionAdapter(currentVersion);
         adapter.setFavorites(favoriteIds);
+        adapter.setOnChampionClickListener(this);
         binding.rvChampions.setLayoutManager(new GridLayoutManager(this, 3));
         binding.rvChampions.setAdapter(adapter);
     }
@@ -288,5 +289,13 @@ public class MainActivity extends BaseActivity {
             }
             return false;
         });
+    }
+
+    @Override
+    public void onChampionClick(Champion champion) {
+        Intent intent = new Intent(this, DetailChampion.class);
+        intent.putExtra(DetailChampion.EXTRA_CHAMPION, champion);
+        intent.putExtra(DetailChampion.EXTRA_VERSION, currentVersion);
+        startActivity(intent);
     }
 }

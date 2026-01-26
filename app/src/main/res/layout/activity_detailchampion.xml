@@ -168,6 +168,7 @@
                 android:layout_marginBottom="24dp" />
 
             <TextView
+                android:id="@+id/tvAllyTipsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ALLY TIPS"
@@ -185,6 +186,7 @@
                 android:justificationMode="inter_word"/>
 
             <TextView
+                android:id="@+id/tvEnemyTipsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ENEMY TIPS"
@@ -202,6 +204,7 @@
                 android:justificationMode="inter_word"/>
 
             <View
+                android:id="@+id/vTipsSeparator"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/lol_gold"

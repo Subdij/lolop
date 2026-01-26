@@ -144,10 +144,20 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
             if (representativeItem != null && representativeItem.getImage() != null) {
                 String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + representativeItem.getImage().getFull();
-                Glide.with(context)
-                     .load(imageUrl)
-                     .placeholder(R.color.lol_blue_light)
-                     .into(ivIcon);
+                
+                if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+                    Glide.with(context)
+                         .load(imageUrl)
+                         .placeholder(R.color.lol_blue_light)
+                         .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                         .dontAnimate()
+                         .into(ivIcon);
+                } else {
+                    Glide.with(context)
+                         .load(imageUrl)
+                         .placeholder(R.color.lol_blue_light)
+                         .into(ivIcon);
+                }
             } else {
                  ivIcon.setImageResource(R.mipmap.ic_launcher);
             }

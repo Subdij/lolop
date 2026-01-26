@@ -28,7 +28,8 @@ import retrofit2.Response;
 public class DetailChampion extends AppCompatActivity {
 
     public static final String EXTRA_CHAMPION = "extra_champion";
-    private final String currentVersion = "14.5.1";
+    public static final String EXTRA_VERSION = "extra_version";
+    private String currentVersion = "14.5.1";
 
     private ImageView championSplash;
     private TextView championName;
@@ -42,6 +43,9 @@ public class DetailChampion extends AppCompatActivity {
     private LinearLayout spellsContainer;
     private TextView allyTips;
     private TextView enemyTips;
+    private TextView allyTipsHeader;
+    private TextView enemyTipsHeader;
+    private View tipsSeparator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,10 @@ public class DetailChampion extends AppCompatActivity {
         }
 
         initViews();
+
+        if (getIntent().hasExtra(EXTRA_VERSION)) {
+            currentVersion = getIntent().getStringExtra(EXTRA_VERSION);
+        }
 
         Champion champion = getIntent().getParcelableExtra(EXTRA_CHAMPION);
 
@@ -79,6 +87,9 @@ public class DetailChampion extends AppCompatActivity {
         spellsContainer = findViewById(R.id.spells_container);
         allyTips = findViewById(R.id.ally_tips);
         enemyTips = findViewById(R.id.enemy_tips);
+        allyTipsHeader = findViewById(R.id.tvAllyTipsHeader);
+        enemyTipsHeader = findViewById(R.id.tvEnemyTipsHeader);
+        tipsSeparator = findViewById(R.id.vTipsSeparator);
     }
 
     private void displayBasicInfo(Champion champion) {
@@ -90,11 +101,21 @@ public class DetailChampion extends AppCompatActivity {
         championLore.setText(champion.getLore());
 
         String splashUrl = "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/" + champion.getId() + "_0.jpg";
-        Glide.with(this).load(splashUrl).into(championSplash);
+        
+        if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+            Glide.with(this)
+                 .load(splashUrl)
+                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                 .dontAnimate()
+                 .into(championSplash);
+        } else {
+            Glide.with(this).load(splashUrl).into(championSplash);
+        }
     }
 
     private void fetchChampionDetail(String championId) {
-        RetrofitClient.getApiService().getChampionDetail(currentVersion, championId).enqueue(new Callback<ChampionListResponse>() {
+        String apiLang = com.example.lolop.utils.LocaleHelper.getApiLanguage(this);
+        RetrofitClient.getApiService().getChampionDetail(currentVersion, apiLang, championId).enqueue(new Callback<ChampionListResponse>() {
             @Override
             public void onResponse(@NonNull Call<ChampionListResponse> call, @NonNull Response<ChampionListResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -128,7 +149,15 @@ public class DetailChampion extends AppCompatActivity {
             passiveName.setText(champion.getPassive().getName());
             passiveDescription.setText(Html.fromHtml(champion.getPassive().getDescription(), Html.FROM_HTML_MODE_COMPACT));
             String passiveUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/passive/" + champion.getPassive().getImage().getFull();
-            Glide.with(this).load(passiveUrl).into(passiveImage);
+            if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+                Glide.with(this)
+                     .load(passiveUrl)
+                     .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                     .dontAnimate()
+                     .into(passiveImage);
+            } else {
+                Glide.with(this).load(passiveUrl).into(passiveImage);
+            }
         }
 
         // Spells
@@ -140,8 +169,28 @@ public class DetailChampion extends AppCompatActivity {
         }
 
         // Tips
-        allyTips.setText(formatTips(champion.getAllytips()));
-        enemyTips.setText(formatTips(champion.getEnemytips()));
+        boolean hasAllyTips = champion.getAllytips() != null && !champion.getAllytips().isEmpty();
+        boolean hasEnemyTips = champion.getEnemytips() != null && !champion.getEnemytips().isEmpty();
+
+        updateTipsSection(champion.getAllytips(), allyTipsHeader, allyTips);
+        updateTipsSection(champion.getEnemytips(), enemyTipsHeader, enemyTips);
+
+        if (!hasAllyTips && !hasEnemyTips) {
+            tipsSeparator.setVisibility(View.GONE);
+        } else {
+            tipsSeparator.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updateTipsSection(List<String> tips, TextView header, TextView content) {
+        if (tips == null || tips.isEmpty()) {
+            header.setVisibility(View.GONE);
+            content.setVisibility(View.GONE);
+        } else {
+            header.setVisibility(View.VISIBLE);
+            content.setVisibility(View.VISIBLE);
+            content.setText(formatTips(tips));
+        }
     }
 
     private void setupDifficultyBars(int difficulty) {
@@ -177,7 +226,15 @@ public class DetailChampion extends AppCompatActivity {
         desc.setText(Html.fromHtml(spell.getDescription(), Html.FROM_HTML_MODE_COMPACT));
 
         String spellUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/spell/" + spell.getImage().getFull();
-        Glide.with(this).load(spellUrl).into(img);
+        if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+            Glide.with(this)
+                 .load(spellUrl)
+                 .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                 .dontAnimate()
+                 .into(img);
+        } else {
+            Glide.with(this).load(spellUrl).into(img);
+        }
 
         spellsContainer.addView(spellView);
     }
