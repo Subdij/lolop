@@ -900,30 +900,30 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             String line = lines[i];
             
             // Complex Stats
-            line = replaceStat(line, "régén(\\.|ération)?( de base)? des pv", "ic_stat_hp_regen");
-            line = replaceStat(line, "régén(\\.|ération)?( de base)? du mana", "ic_stat_mana_regen");
-            line = replaceStat(line, "pénétration d'armure", "ic_stat_armor_pen");
-            line = replaceStat(line, "pénétration magique", "ic_stat_magic_pen");
-            line = replaceStat(line, "efficacité de vos soins et boucliers", "ic_stat_heal_shield");
+            line = replaceStat(line, "régén(\\.|ération)?( de base)? des pv|base health regen", "ic_stat_hp_regen");
+            line = replaceStat(line, "régén(\\.|ération)?( de base)? du mana|base mana regen", "ic_stat_mana_regen");
+            line = replaceStat(line, "pénétration d'armure|armor penetration", "ic_stat_armor_pen");
+            line = replaceStat(line, "pénétration magique|magic penetration", "ic_stat_magic_pen");
+            line = replaceStat(line, "efficacité de vos soins et boucliers|heal and shield power", "ic_stat_heal_shield");
             line = replaceStat(line, "puissance des soins et boucliers", "ic_stat_heal_shield");
-            line = replaceStat(line, "vol de vie", "ic_stat_lifesteal");
-            line = replaceStat(line, "omnivampirisme", "ic_stat_vamp");
-            line = replaceStat(line, "dégâts (des|de) coups? critiques?", "ic_stat_crit_damage");
-            line = replaceStat(line, "chances de coup critique", "ic_stat_crit");
-            line = replaceStat(line, "accélération de compétence", "ic_stat_haste");
-            line = replaceStat(line, "vitesse de déplacement", "ic_stat_move_speed");
-            line = replaceStat(line, "vitesse d'attaque", "ic_stat_attack_speed");
-            line = replaceStat(line, "létalité", "ic_stat_armor_pen");
+            line = replaceStat(line, "vol de vie|life steal", "ic_stat_lifesteal");
+            line = replaceStat(line, "omnivampirisme|omnivamp", "ic_stat_vamp");
+            line = replaceStat(line, "dégâts (des|de) coups? critiques?|critical strike damage", "ic_stat_crit_damage");
+            line = replaceStat(line, "chances de coup critique|critical strike chance", "ic_stat_crit");
+            line = replaceStat(line, "accélération de compétence|ability haste", "ic_stat_haste");
+            line = replaceStat(line, "vitesse de déplacement|move speed", "ic_stat_move_speed");
+            line = replaceStat(line, "vitesse d'attaque|attack speed", "ic_stat_attack_speed");
+            line = replaceStat(line, "létalité|lethality", "ic_stat_armor_pen");
             line = replaceStat(line, "tenacity|ténacité", "ic_stat_tenacity");
 
             // Simple Stats
-            line = replaceStat(line, "dégâts d'attaque", "ic_stat_ad");
-            line = replaceStat(line, "puissance", "ic_stat_ap");
-            line = replaceStat(line, "(?<!d')armure", "ic_stat_armor"); 
-            line = replaceStat(line, "résistance magique", "ic_stat_mr");
+            line = replaceStat(line, "dégâts d'attaque|attack damage", "ic_stat_ad");
+            line = replaceStat(line, "puissance|ability power", "ic_stat_ap");
+            line = replaceStat(line, "(?<!d')armure|\\barmor\\b", "ic_stat_armor"); 
+            line = replaceStat(line, "résistance magique|magic resist", "ic_stat_mr");
             
             // PV / Mana / Gold
-            line = replaceStat(line, "(?<!des )\\bPV\\b", "ic_stat_health");
+            line = replaceStat(line, "(?<!des )\\bPV\\b|\\bHealth\\b", "ic_stat_health");
             line = replaceStat(line, "points de vie", "ic_stat_health");
             line = replaceStat(line, "(?<!du )\\bmana\\b", "ic_stat_mana");
             line = replaceStat(line, "\\bPO\\b", "ic_stat_gold");
@@ -968,7 +968,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             String stat = m.group(3);
             
             // Always ensure the icon is at the start (Left aligned)
-            String iconTag = "<img src='" + iconName + "'/> ";
+            String iconTag = "<img src=\"" + iconName + "\"> ";
             
             if (hasPreIcon) {
                 // If icon exists before, verify duplication logic.
