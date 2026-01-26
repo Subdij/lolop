@@ -50,11 +50,14 @@
                         android:layout_marginStart="24dp"
                         android:layout_marginEnd="24dp"
                         android:background="@drawable/search_bar_background"
-                        android:hint="Rechercher un champion..."
+                        android:hint="@string/search_champion_hint"
                         android:padding="12dp"
                         android:textColor="@color/white"
                         android:textColorHint="@color/lol_silver"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:imeOptions="actionDone" />
 
                     <HorizontalScrollView
                         android:id="@+id/roleFilterContainer"
@@ -143,6 +146,43 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="16dp"
+        android:elevation="10dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/btnLangFr"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/flag_fr"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            app:strokeWidth="2.5dp"
+            app:strokeColor="@color/lol_gold"
+            app:shapeAppearanceOverlay="@style/CircleImageStyle"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/btnLangEn"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/flag_en"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            app:strokeWidth="2.5dp"
+            app:strokeColor="@color/lol_gold"
+            app:shapeAppearanceOverlay="@style/CircleImageStyle"
+            android:clickable="true"
+            android:focusable="true"/>
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChampions"
         android:layout_width="match_parent"
@@ -150,9 +190,9 @@
         android:clipToPadding="false"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="80dp"
+        android:paddingBottom="@dimen/champion_list_bottom_padding"
         android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="100dp"
+        android:fadingEdgeLength="@dimen/fading_edge_length"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -160,7 +200,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/lol_blue_dark"
+        android:background="@drawable/bg_bottom_nav"
         app:itemIconTint="@color/lol_gold"
         app:itemTextColor="@color/lol_gold"
         app:menu="@menu/bottom_nav_menu" />

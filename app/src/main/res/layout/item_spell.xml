@@ -3,28 +3,27 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp"
-    android:gravity="center_vertical">
+    android:padding="8dp">
 
     <ImageView
         android:id="@+id/ivSpellIcon"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:scaleType="centerCrop"
-        android:background="@color/lol_gold"
+        android:background="@color/lol_blue_dark"
         android:padding="1dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="12dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvSpellName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/lol_gold"
+            android:textColor="@color/lol_gold_bright"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -33,7 +32,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:textSize="14sp"
-            android:justificationMode="inter_word"/>
+            android:textSize="14sp" />
     </LinearLayout>
 </LinearLayout>

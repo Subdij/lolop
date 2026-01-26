@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="12.dp">
+    android:paddingBottom="12dp">
 
     <TextView
         android:id="@+id/tvBlockTitle"
@@ -12,7 +12,7 @@
         android:textColor="@color/lol_silver"
         android:textSize="14sp"
         android:textStyle="bold"
-        android:paddingBottom="4.dp" />
+        android:paddingBottom="4dp" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"

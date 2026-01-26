@@ -13,9 +13,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Lolop">
-
+        
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,9 +26,19 @@
 
         <activity
             android:name=".DetailChampion"
-            android:exported="true"
-            android:parentActivityName=".MainActivity">
+            android:screenOrientation="portrait"
+            android:exported="true">
         </activity>
+
+        <activity
+            android:name=".ItemsActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <activity
+            android:name=".PatchNoteActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
 
         <receiver
             android:name=".receiver.ManaReceiver"
@@ -36,7 +47,7 @@
                 <action android:name="android.intent.action.BATTERY_LOW" />
             </intent-filter>
         </receiver>
-
+            
     </application>
 
 </manifest>

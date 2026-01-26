@@ -14,18 +14,23 @@ import com.example.lolop.database.FavoriteDatabase;
 import com.example.lolop.databinding.ActivityMainBinding;
 import com.example.lolop.model.Champion;
 import com.example.lolop.model.ChampionListResponse;
+import com.example.lolop.utils.LocaleHelper;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.content.Context;
 
-public class MainActivity extends AppCompatActivity implements ChampionAdapter.OnChampionClickListener {
+public class MainActivity extends BaseActivity {
 
     private ActivityMainBinding binding;
     private ChampionAdapter adapter;
     private ArrayList<Champion> championList = new ArrayList<>();
-    private final String currentVersion = "14.5.1";
+    private String currentVersion = "14.5.1"; // Default fallback
     private FavoriteDatabase db;
+    private java.util.Set<String> favoriteIds = new java.util.HashSet<>();
     private String currentRoleFilter = "All";
     private View currentSelectedView = null;
 
@@ -36,33 +41,141 @@ public class MainActivity extends AppCompatActivity implements ChampionAdapter.O
         setContentView(binding.getRoot());
 
         db = new FavoriteDatabase(this);
+        setupNavigation();
         setupRecyclerView();
         setupSearch();
         setupRoleIcons();
         setupStickyAnimation();
+        setupLanguageButtons();
 
-        fetchChampions();
+        if (savedInstanceState != null) {
+            //noinspection unchecked
+            championList = (ArrayList<Champion>) savedInstanceState.getSerializable("CHAMP_LIST");
+            if (savedInstanceState.containsKey("CURRENT_VERSION")) {
+                currentVersion = savedInstanceState.getString("CURRENT_VERSION");
+            }
+            if (adapter != null) {
+                adapter.setVersion(currentVersion);
+            }
+            if (championList != null && !championList.isEmpty()) {
+                sortAndDisplayChampions();
+            } else {
+                fetchLatestVersion(); 
+            }
+        } else {
+            fetchLatestVersion();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshFavorites();
+    }
+
+    private void refreshFavorites() {
+        if (db != null) {
+            favoriteIds = db.getAllFavorites();
+            if (adapter != null) {
+                adapter.setFavorites(favoriteIds);
+                sortAndDisplayChampions();
+            }
+        }
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleHelper.onAttach(newBase));
+    }
+
+    private void fetchLatestVersion() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        RetrofitClient.getApiService().getVersions().enqueue(new Callback<List<String>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<String>> call, @NonNull Response<List<String>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    currentVersion = response.body().get(0);
+                    if (adapter != null) {
+                        adapter.setVersion(currentVersion);
+                    }
+                }
+                fetchChampions();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<String>> call, @NonNull Throwable t) {
+                // If version fetch fails, try to fetch champions with default fallback version
+                fetchChampions(); 
+            }
+        });
+    }
+
+    private void setupLanguageButtons() {
+        binding.btnLangFr.setOnClickListener(v -> setLanguage("fr"));
+        binding.btnLangEn.setOnClickListener(v -> setLanguage("en"));
+        
+        updateLanguageUI(LocaleHelper.getLanguage(this));
+    }
+
+    private void updateLanguageUI(String currentLanguage) {
+        float activeScale = 1.0f;
+        float inactiveScale = 0.75f;
+        float activeAlpha = 1.0f;
+        float inactiveAlpha = 0.5f;
+
+        if ("fr".equals(currentLanguage)) {
+            binding.btnLangFr.setAlpha(activeAlpha);
+            binding.btnLangFr.setScaleX(activeScale);
+            binding.btnLangFr.setScaleY(activeScale);
+            
+            binding.btnLangEn.setAlpha(inactiveAlpha);
+            binding.btnLangEn.setScaleX(inactiveScale);
+            binding.btnLangEn.setScaleY(inactiveScale);
+        } else {
+            // Default to English if not French
+            binding.btnLangEn.setAlpha(activeAlpha);
+            binding.btnLangEn.setScaleX(activeScale);
+            binding.btnLangEn.setScaleY(activeScale);
+            
+            binding.btnLangFr.setAlpha(inactiveAlpha);
+            binding.btnLangFr.setScaleX(inactiveScale);
+            binding.btnLangFr.setScaleY(inactiveScale);
+        }
+    }
+
+    private void setLanguage(String language) {
+        LocaleHelper.setLocale(this, language);
+        recreate();
     }
 
     private void setupStickyAnimation() {
         binding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            // Disable complex animation calculation in power saving mode to save CPU
+            if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+                return;
+            }
+            
             float totalScrollRange = appBarLayout.getTotalScrollRange();
             if (totalScrollRange == 0) return;
 
             float percentage = (float) Math.abs(verticalOffset) / totalScrollRange;
 
+            // Définir le pivot en haut au centre pour que le logo rétrécisse vers le haut
             binding.ivLogoLarge.setPivotY(0f);
             binding.ivLogoLarge.setPivotX(binding.ivLogoLarge.getWidth() / 2f);
 
+            // On réduit le logo jusqu'à 40% de sa taille originale (augmenté de 30% à 40%)
             float minScale = 0.5f;
             float scale = 1.0f - (percentage * (1.0f - minScale));
-
+            
             binding.ivLogoLarge.setScaleX(scale);
             binding.ivLogoLarge.setScaleY(scale);
-
+            
+            // Applique un décalage vertical progressif de 0dp à 20dp
             float maxTranslationY = 10 * getResources().getDisplayMetrics().density;
             binding.ivLogoLarge.setTranslationY(percentage * maxTranslationY);
 
+            // Le logo reste visible et sticky grâce au mode 'pin' dans le XML
             binding.ivLogoLarge.setAlpha(1.0f);
         });
     }
@@ -103,15 +216,15 @@ public class MainActivity extends AppCompatActivity implements ChampionAdapter.O
 
     private void setupRecyclerView() {
         adapter = new ChampionAdapter(currentVersion);
-        adapter.setDatabase(db);
-        adapter.setOnChampionClickListener(this);
+        adapter.setFavorites(favoriteIds);
         binding.rvChampions.setLayoutManager(new GridLayoutManager(this, 3));
         binding.rvChampions.setAdapter(adapter);
     }
 
     private void fetchChampions() {
         binding.progressBar.setVisibility(View.VISIBLE);
-        RetrofitClient.getApiService().getChampions(currentVersion).enqueue(new Callback<>() {
+        String apiLang = LocaleHelper.getApiLanguage(this);
+        RetrofitClient.getApiService().getChampions(currentVersion, apiLang).enqueue(new Callback<ChampionListResponse>() {
             @Override
             public void onResponse(@NonNull Call<ChampionListResponse> call, @NonNull Response<ChampionListResponse> response) {
                 binding.progressBar.setVisibility(View.GONE);
@@ -132,22 +245,48 @@ public class MainActivity extends AppCompatActivity implements ChampionAdapter.O
         if (championList == null || championList.isEmpty()) return;
         ArrayList<Champion> favorites = new ArrayList<>();
         ArrayList<Champion> others = new ArrayList<>();
+        if (favoriteIds == null) refreshFavorites();
+        
         for (Champion champion : championList) {
-            if (db.isFavorite(champion.getId())) favorites.add(champion);
+            if (favoriteIds.contains(champion.getId())) favorites.add(champion);
             else others.add(champion);
         }
-        favorites.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
-        others.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+        Collections.sort(favorites, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
+        Collections.sort(others, (c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
         ArrayList<Champion> sortedList = new ArrayList<>();
         sortedList.addAll(favorites);
         sortedList.addAll(others);
         adapter.setChampions(sortedList);
     }
 
+
+
     @Override
-    public void onChampionClick(Champion champion) {
-        Intent intent = new Intent(this, DetailChampion.class);
-        intent.putExtra(DetailChampion.EXTRA_CHAMPION, champion);
-        startActivity(intent);
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("CHAMP_LIST", championList);
+        outState.putString("CURRENT_VERSION", currentVersion);
+    }
+
+    private void setupNavigation() {
+        binding.bottomNavigation.setSelectedItemId(R.id.nav_champions);
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.nav_champions) {
+                return true;
+            } else if (item.getItemId() == R.id.nav_items) {
+                Intent intent = new Intent(MainActivity.this, ItemsActivity.class);
+                intent.putExtra("CURRENT_VERSION", currentVersion);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (item.getItemId() == R.id.nav_patch) {
+                Intent intent = new Intent(MainActivity.this, PatchNoteActivity.class);
+                intent.putExtra("CURRENT_VERSION", currentVersion);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return false;
+        });
     }
 }

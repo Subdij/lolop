@@ -1,8 +1,6 @@
 package com.example.lolop.adapter;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.example.lolop.DetailChampion;
 import com.example.lolop.database.FavoriteDatabase;
 import com.example.lolop.databinding.ItemChampionBinding;
 import com.example.lolop.model.Champion;
@@ -21,27 +18,22 @@ import java.util.List;
 public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHolder> {
     private List<Champion> champions = new ArrayList<>();
     private List<Champion> championsFull = new ArrayList<>();
-    private final String version;
-    private FavoriteDatabase db;
+    private String version;
+    private java.util.Set<String> favoriteIds = new java.util.HashSet<>();
     private String currentSearchText = "";
     private String currentRoleFilter = "All";
-    private OnChampionClickListener onChampionClickListener;
-
-    public interface OnChampionClickListener {
-        void onChampionClick(Champion champion);
-    }
-
-    public void setOnChampionClickListener(OnChampionClickListener listener) {
-        this.onChampionClickListener = listener;
-    }
-
 
     public ChampionAdapter(String version) {
         this.version = version;
     }
 
-    public void setDatabase(FavoriteDatabase db) {
-        this.db = db;
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public void setFavorites(java.util.Set<String> favoriteIds) {
+        this.favoriteIds = favoriteIds;
+        notifyDataSetChanged();
     }
 
     public void setChampions(List<Champion> champions) {
@@ -65,10 +57,11 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         List<Champion> filteredList = new ArrayList<>();
         for (Champion item : championsFull) {
             boolean matchesSearch = item.getName().toLowerCase().contains(currentSearchText);
-
-            boolean matchesRole = currentRoleFilter.equals("All") ||
+            
+            // UTILISATION DU MAPPAGE MANUEL
+            boolean matchesRole = currentRoleFilter.equals("All") || 
                                  ChampionMapper.isChampionInRole(item.getId(), currentRoleFilter);
-
+            
             if (matchesSearch && matchesRole) {
                 filteredList.add(item);
             }
@@ -90,23 +83,26 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         holder.binding.tvChampionNameDisplay.setText(champion.getName());
 
         String iconUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/champion/" + champion.getImage().getFull();
+        
+        if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(iconUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                    .dontAnimate()
+                    .into(holder.binding.ivChampionIcon);
+        } else {
+            Glide.with(holder.itemView.getContext())
+                    .load(iconUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.binding.ivChampionIcon);
+        }
 
-        Glide.with(holder.itemView.getContext())
-                .load(iconUrl)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(holder.binding.ivChampionIcon);
-
-        if (db != null && db.isFavorite(champion.getId())) {
+        if (favoriteIds != null && favoriteIds.contains(champion.getId())) {
             holder.binding.ivFavoriteStar.setVisibility(View.VISIBLE);
         } else {
             holder.binding.ivFavoriteStar.setVisibility(View.GONE);
         }
-
-        holder.itemView.setOnClickListener(v -> {
-            if (onChampionClickListener != null) {
-                onChampionClickListener.onChampionClick(champion);
-            }
-        });
     }
 
     @Override
@@ -114,7 +110,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         return champions.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         public final ItemChampionBinding binding;
         public ViewHolder(ItemChampionBinding binding) {
             super(binding.getRoot());

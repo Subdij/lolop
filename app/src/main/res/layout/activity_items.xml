@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/items_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lol_blue_deep"
+    tools:context=".ItemsActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/lol_blue_deep"
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/ivShopHeader"
+                    android:layout_width="430dp"
+                    android:layout_height="188dp"
+                    android:layout_marginLeft="-9dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/shop_header"
+                    tools:ignore="ContentDescription" />
+
+                <View
+                    android:layout_width="430dp"
+                    android:layout_height="80dp"
+                    android:layout_marginLeft="-9dp"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/gradient_fade_bottom" />
+            </FrameLayout>
+
+            <EditText
+                android:id="@+id/etSearchItems"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/search_bar_background"
+                android:hint="@string/search_item_hint"
+                android:padding="12dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/lol_silver"
+                android:textSize="14sp"
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionDone"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCategories"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="120dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_bottom_nav"
+        app:itemIconTint="@color/lol_gold"
+        app:itemTextColor="@color/lol_gold"
+        app:menu="@menu/bottom_nav_menu" />
+
+    <ProgressBar
+        android:id="@+id/progressBarItems"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <!-- Overlay Container -->
+    <FrameLayout
+        android:id="@+id/overlayContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:elevation="10dp">
+
+        <!-- Semi-transparent Background -->
+        <View
+            android:id="@+id/overlayBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Overlay Content Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            android:layout_margin="48dp"
+            android:layout_gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/lol_blue_dark"
+            app:cardElevation="8dp"
+            app:strokeColor="@color/lol_gold"
+            app:strokeWidth="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <ImageView
+                        android:id="@+id/btnInfoOverlay"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/ic_info"
+                        app:tint="@color/lol_gold"
+                        tools:ignore="ContentDescription"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="4dp"
+                        android:background="@drawable/border_circle_gold"/>
+
+                    <TextView
+                        android:id="@+id/tvOverlayTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/btnInfoOverlay"
+                        android:layout_toStartOf="@id/btnCloseOverlay"
+                        android:layout_centerVertical="true"
+                        android:gravity="center"
+                        android:text="Category Title"
+                        android:textColor="@color/lol_gold"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        app:autoSizeTextType="uniform"
+                        app:autoSizeMinTextSize="12sp"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeStepGranularity="1sp" />
+
+                    <ImageView
+                        android:id="@+id/btnCloseOverlay"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/ic_close"
+                        app:tint="@color/lol_gold"
+                        tools:ignore="ContentDescription"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="4dp"
+                        android:background="@drawable/border_circle_gold"/>
+                </RelativeLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/lol_gold"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:alpha="0.5"/>
+
+                <TextView
+                    android:id="@+id/tvOverlayDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/border_item_gold"
+                    android:padding="12dp"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:text="Description..." />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvOverlayItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:requiresFadingEdge="vertical"
+                    android:fadingEdgeLength="50dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
