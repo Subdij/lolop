@@ -4,17 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/lol_blue_deep"
     tools:context=".DetailChampion">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/lol_blue_deep"
+        app:elevation="0dp"
+        app:liftOnScroll="false">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_arrow_back" />
+            android:background="@color/lol_blue_deep"
+            app:titleTextColor="@color/lol_gold_bright"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@color/lol_gold_bright" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -32,32 +39,193 @@
             <ImageView
                 android:id="@+id/champion_splash"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="220dp"
                 android:scaleType="centerCrop"
+                android:layout_marginBottom="16dp"
                 tools:src="@tools:sample/backgrounds/scenic" />
 
             <TextView
                 android:id="@+id/champion_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 android:textStyle="bold"
+                android:textColor="@color/lol_gold_bright"
                 tools:text="Champion Name" />
 
             <TextView
                 android:id="@+id/champion_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="22sp"
                 android:textStyle="italic"
+                android:textColor="@color/lol_gold"
+                android:layout_marginBottom="8dp"
                 tools:text="Champion Title" />
+
+            <TextView
+                android:id="@+id/champion_tags"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/lol_silver"
+                android:layout_marginBottom="8dp"
+                tools:text="Fighter" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="24dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DIFFICULTY: "
+                    android:textSize="12sp"
+                    android:textColor="@color/lol_silver"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"/>
+                <LinearLayout
+                    android:id="@+id/difficulty_bars_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <!-- Bars will be added here -->
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PASSIVE"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/lol_gold_bright"
+                android:letterSpacing="0.1" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="24dp"
+                android:gravity="center_vertical">
+                <ImageView
+                    android:id="@+id/passive_image"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:padding="2dp"
+                    android:background="@color/lol_gold"
+                    android:layout_marginEnd="16dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        android:id="@+id/passive_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/lol_gold"/>
+                    <TextView
+                        android:id="@+id/passive_description"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:justificationMode="inter_word"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/lol_gold"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SPELLS"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/lol_gold_bright"
+                android:letterSpacing="0.1" />
+
+            <LinearLayout
+                android:id="@+id/spells_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="24dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/lol_gold"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ALLY TIPS"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/lol_gold_bright"
+                android:letterSpacing="0.1" />
+            <TextView
+                android:id="@+id/ally_tips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:justificationMode="inter_word"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ENEMY TIPS"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/lol_gold_bright"
+                android:letterSpacing="0.1" />
+            <TextView
+                android:id="@+id/enemy_tips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:justificationMode="inter_word"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/lol_gold"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LORE"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/lol_gold_bright"
+                android:letterSpacing="0.1" />
 
             <TextView
                 android:id="@+id/champion_lore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                tools:text="Champion lore..." />
+                android:textColor="@color/white"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                tools:text="Champion lore..."
+                android:justificationMode="inter_word"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

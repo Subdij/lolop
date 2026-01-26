@@ -17,6 +17,8 @@ public class Champion implements Parcelable {
     private List<String> tags;
     private List<Spell> spells;
     private Passive passive;
+    private List<String> allytips;
+    private List<String> enemytips;
 
     // Getters
     public String getId() { return id; }
@@ -29,6 +31,8 @@ public class Champion implements Parcelable {
     public List<String> getTags() { return tags; }
     public List<Spell> getSpells() { return spells; }
     public Passive getPassive() { return passive; }
+    public List<String> getAllytips() { return allytips; }
+    public List<String> getEnemytips() { return enemytips; }
 
     protected Champion(Parcel in) {
         id = in.readString();
@@ -42,6 +46,8 @@ public class Champion implements Parcelable {
         tags = in.createStringArrayList();
         spells = in.createTypedArrayList(Spell.CREATOR);
         passive = in.readParcelable(Passive.class.getClassLoader());
+        allytips = in.createStringArrayList();
+        enemytips = in.createStringArrayList();
     }
 
     @Override
@@ -57,6 +63,8 @@ public class Champion implements Parcelable {
         dest.writeStringList(tags);
         dest.writeTypedList(spells);
         dest.writeParcelable(passive, flags);
+        dest.writeStringList(allytips);
+        dest.writeStringList(enemytips);
     }
 
     @Override
@@ -151,15 +159,18 @@ public class Champion implements Parcelable {
         private String id;
         private String name;
         private String description;
+        private String tooltip;
         private Image image;
         public String getName() { return name; }
         public String getDescription() { return description; }
+        public String getTooltip() { return tooltip; }
         public Image getImage() { return image; }
 
         protected Spell(Parcel in) {
             id = in.readString();
             name = in.readString();
             description = in.readString();
+            tooltip = in.readString();
             image = in.readParcelable(Image.class.getClassLoader());
         }
 
@@ -168,6 +179,7 @@ public class Champion implements Parcelable {
             dest.writeString(id);
             dest.writeString(name);
             dest.writeString(description);
+            dest.writeString(tooltip);
             dest.writeParcelable(image, flags);
         }
 
