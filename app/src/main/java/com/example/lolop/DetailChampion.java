@@ -46,11 +46,16 @@ public class DetailChampion extends AppCompatActivity {
     private TextView allyTipsHeader;
     private TextView enemyTipsHeader;
     private View tipsSeparator;
+    private ImageView ivFavorite;
+    private com.example.lolop.database.FavoriteDatabase db;
+    private boolean isFavorite = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detailchampion);
+
+        db = new com.example.lolop.database.FavoriteDatabase(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -71,6 +76,7 @@ public class DetailChampion extends AppCompatActivity {
         if (champion != null) {
             displayBasicInfo(champion);
             fetchChampionDetail(champion.getId());
+            setupFavoriteButton(champion.getId());
         }
     }
 
@@ -90,6 +96,31 @@ public class DetailChampion extends AppCompatActivity {
         allyTipsHeader = findViewById(R.id.tvAllyTipsHeader);
         enemyTipsHeader = findViewById(R.id.tvEnemyTipsHeader);
         tipsSeparator = findViewById(R.id.vTipsSeparator);
+        ivFavorite = findViewById(R.id.ivFavorite);
+    }
+
+    private void setupFavoriteButton(String championId) {
+        isFavorite = db.isFavorite(championId);
+        updateFavoriteIcon();
+
+        ivFavorite.setOnClickListener(v -> {
+            if (isFavorite) {
+                db.removeFavorite(championId);
+                isFavorite = false;
+            } else {
+                db.addFavorite(championId);
+                isFavorite = true;
+            }
+            updateFavoriteIcon();
+        });
+    }
+
+    private void updateFavoriteIcon() {
+        if (isFavorite) {
+            ivFavorite.setImageResource(R.drawable.ic_star_filled);
+        } else {
+            ivFavorite.setImageResource(R.drawable.ic_star_outline);
+        }
     }
 
     private void displayBasicInfo(Champion champion) {
@@ -135,6 +166,8 @@ public class DetailChampion extends AppCompatActivity {
 
     private void updateUI(Champion champion) {
         championLore.setText(champion.getLore());
+        championTitle.setText(champion.getTitle());
+
 
         // Tags
         String tags = champion.getTags() != null ? String.join(" | ", champion.getTags()) : "";

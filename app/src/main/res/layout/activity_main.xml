@@ -126,6 +126,17 @@
                                 android:background="@drawable/role_border"
                                 android:padding="9dp"
                                 android:src="@drawable/role_support" />
+
+                            <ImageView
+                                android:id="@+id/ivRoleFavorites"
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/role_border"
+                                android:padding="9dp"
+                                android:src="@drawable/ic_star_filled"
+                                app:tint="@color/lol_gold" />
                         </LinearLayout>
                     </HorizontalScrollView>
                 </LinearLayout>

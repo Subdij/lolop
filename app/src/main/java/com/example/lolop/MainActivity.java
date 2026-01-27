@@ -181,6 +181,7 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
     }
 
     private void setupRoleIcons() {
+        binding.ivRoleFavorites.setOnClickListener(v -> toggleRoleFilter(v, "Favorites"));
         binding.ivRoleTop.setOnClickListener(v -> toggleRoleFilter(v, "Top"));
         binding.ivRoleJungle.setOnClickListener(v -> toggleRoleFilter(v, "Jungle"));
         binding.ivRoleMid.setOnClickListener(v -> toggleRoleFilter(v, "Mid"));

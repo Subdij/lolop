@@ -36,6 +36,8 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+
+
             <ImageView
                 android:id="@+id/champion_splash"
                 android:layout_width="match_parent"
@@ -44,14 +46,33 @@
                 android:layout_marginBottom="16dp"
                 tools:src="@tools:sample/backgrounds/scenic" />
 
-            <TextView
-                android:id="@+id/champion_name"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                android:textColor="@color/lol_gold_bright"
-                tools:text="Champion Name" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/champion_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/lol_gold_bright"
+                    tools:text="Ahri" />
+
+                <ImageView
+                    android:id="@+id/ivFavorite"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_star_outline"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:tint="@color/lol_gold"
+                    android:contentDescription="Favorite" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/champion_title"

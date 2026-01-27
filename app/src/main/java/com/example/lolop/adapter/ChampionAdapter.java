@@ -46,7 +46,6 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
     }
 
     public void setChampions(List<Champion> champions) {
-        this.champions = new ArrayList<>(champions);
         this.championsFull = new ArrayList<>(champions);
         applyFilters();
     }
@@ -61,22 +60,55 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         applyFilters();
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private void applyFilters() {
         List<Champion> filteredList = new ArrayList<>();
         for (Champion item : championsFull) {
             boolean matchesSearch = item.getName().toLowerCase().contains(currentSearchText);
             
-            // UTILISATION DU MAPPAGE MANUEL
-            boolean matchesRole = currentRoleFilter.equals("All") || 
-                                 ChampionMapper.isChampionInRole(item.getId(), currentRoleFilter);
+            boolean matchesRole = false;
+            if (currentRoleFilter.equals("All")) {
+                matchesRole = true;
+            } else if (currentRoleFilter.equals("Favorites")) {
+                matchesRole = favoriteIds != null && favoriteIds.contains(item.getId());
+            } else {
+                matchesRole = ChampionMapper.isChampionInRole(item.getId(), currentRoleFilter);
+            }
             
             if (matchesSearch && matchesRole) {
                 filteredList.add(item);
             }
         }
-        this.champions = filteredList;
-        notifyDataSetChanged();
+        updateList(filteredList);
+    }
+
+    private void updateList(List<Champion> newList) {
+        androidx.recyclerview.widget.DiffUtil.DiffResult diffResult = androidx.recyclerview.widget.DiffUtil.calculateDiff(new androidx.recyclerview.widget.DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return champions.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newList.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return champions.get(oldItemPosition).getId().equals(newList.get(newItemPosition).getId());
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                Champion oldItem = champions.get(oldItemPosition);
+                Champion newItem = newList.get(newItemPosition);
+                return oldItem.getName().equals(newItem.getName()) &&
+                       oldItem.getImage().getFull().equals(newItem.getImage().getFull());
+            }
+        });
+        
+        this.champions = new ArrayList<>(newList);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
