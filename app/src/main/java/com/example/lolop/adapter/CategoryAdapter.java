@@ -27,18 +27,20 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private final String currentVersion;
     private final OnCategoryClickListener listener;
     private final Map<String, Item> representativeItems; // Stable images
+    private final Map<String, Integer> categoryDrawableImages; // Drawable resources for categories
 
     public interface OnCategoryClickListener {
         void onCategoryClick(String category);
     }
 
     public CategoryAdapter(Context context, List<String> categories, HashMap<String, List<Item>> categoryItems, 
-                           String currentVersion, Map<String, Item> representativeItems, OnCategoryClickListener listener) {
+                           String currentVersion, Map<String, Item> representativeItems, Map<String, Integer> categoryDrawableImages, OnCategoryClickListener listener) {
         this.context = context;
         this.categories = categories;
         this.categoryItems = categoryItems;
         this.currentVersion = currentVersion;
         this.representativeItems = representativeItems;
+        this.categoryDrawableImages = categoryDrawableImages;
         this.listener = listener;
     }
 
@@ -131,35 +133,41 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         void bind(String category) {
             tvName.setText(category);
 
-            // Use stable representative item if available, otherwise fallback to current list
-            Item representativeItem = representativeItems.get(category);
-            
-            // Fallback logic if map doesn't have it (should be covered by ItemsActivity logic)
-            if (representativeItem == null) {
-                 List<Item> items = categoryItems.get(category);
-                 if (items != null && !items.isEmpty()) {
-                     representativeItem = items.get(0);
-                 }
-            }
-
-            if (representativeItem != null && representativeItem.getImage() != null) {
-                String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + representativeItem.getImage().getFull();
-                
-                if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
-                    Glide.with(context)
-                         .load(imageUrl)
-                         .placeholder(R.color.lol_blue_light)
-                         .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
-                         .dontAnimate()
-                         .into(ivIcon);
-                } else {
-                    Glide.with(context)
-                         .load(imageUrl)
-                         .placeholder(R.color.lol_blue_light)
-                         .into(ivIcon);
-                }
+            // Check if there's a drawable resource for this category
+            if (categoryDrawableImages != null && categoryDrawableImages.containsKey(category)) {
+                ivIcon.setImageResource(categoryDrawableImages.get(category));
             } else {
-                 ivIcon.setImageResource(R.mipmap.ic_launcher);
+                // Fallback to loading item image from API
+                // Use stable representative item if available, otherwise fallback to current list
+                Item representativeItem = representativeItems.get(category);
+                
+                // Fallback logic if map doesn't have it (should be covered by ItemsActivity logic)
+                if (representativeItem == null) {
+                     List<Item> items = categoryItems.get(category);
+                     if (items != null && !items.isEmpty()) {
+                         representativeItem = items.get(0);
+                     }
+                }
+
+                if (representativeItem != null && representativeItem.getImage() != null) {
+                    String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + representativeItem.getImage().getFull();
+                    
+                    if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
+                        Glide.with(context)
+                             .load(imageUrl)
+                             .placeholder(R.color.lol_blue_light)
+                             .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                             .dontAnimate()
+                             .into(ivIcon);
+                    } else {
+                        Glide.with(context)
+                             .load(imageUrl)
+                             .placeholder(R.color.lol_blue_light)
+                             .into(ivIcon);
+                    }
+                } else {
+                     ivIcon.setImageResource(R.mipmap.ic_launcher);
+                }
             }
         }
     }
