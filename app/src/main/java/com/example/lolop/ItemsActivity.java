@@ -48,6 +48,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private final HashMap<String, List<Item>> listDataChild = new HashMap<>();
     private List<String> originalDataHeader = new ArrayList<>();
     private HashMap<String, List<Item>> originalDataChild = new HashMap<>();
+    private static final String TAG = "ItemsActivity";
+
 
     private void setupTagTranslations() {
         TAG_TRANSLATIONS.put("Boots", getString(R.string.cat_boots));
@@ -574,6 +576,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             // Temporary map to group items by tag
             HashMap<String, List<Item>> tempMap = new HashMap<>();
 
+            // DEBUG: count items that pass ALL filters (counted once)
+            Set<String> passedFilterIds = new HashSet<>();
+
             // Pre-process: Sort by ID to prioritize standard items and Deduplicate by Name
             List<Item> sortedItems = new ArrayList<>();
             for (Map.Entry<String, Item> entry : data.entrySet()) {
@@ -624,7 +629,20 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 if (item.getName().toLowerCase().contains("obsidienne")) {
                     continue;
                 }
-                
+
+                // ❌ Exclude items that have an "into" attribute
+                // We ONLY want items where "into" does NOT exist in the JSON
+                if (item.getInto() != null) {
+                    continue;
+                }
+
+                // ✅ Item passed ALL filters → count it ONCE
+                if (item.getId() != null) {
+                    passedFilterIds.add(item.getId());
+                }
+
+
+
                 // Map items to tags
                 List<String> tags = item.getTags();
                 if (tags == null || tags.isEmpty()) continue;
@@ -753,7 +771,12 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     representativeItems.put(header, repItem);
                 }
             }
-            
+
+            android.util.Log.d(TAG,
+                    "Items passing filters (map 11 + no 'into'): " + passedFilterIds.size()
+            );
+
+
             // Post result to UI Thread
             runOnUiThread(() -> {
                 // Save results
