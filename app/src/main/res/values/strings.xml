@@ -45,4 +45,5 @@
     <string name="cat_spellblade">Spellblade</string>
     <string name="cat_lifeline">Lifeline</string>
     <string name="cat_shield">Shield</string>
+    <string name="cat_support">Support</string>
 </resources>

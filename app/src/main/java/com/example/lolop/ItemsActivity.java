@@ -48,6 +48,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private final HashMap<String, List<Item>> listDataChild = new HashMap<>();
     private List<String> originalDataHeader = new ArrayList<>();
     private HashMap<String, List<Item>> originalDataChild = new HashMap<>();
+    private static final String TAG = "ItemsActivity";
+
 
     private void setupTagTranslations() {
         TAG_TRANSLATIONS.put("Boots", getString(R.string.cat_boots));
@@ -81,6 +83,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         TAG_TRANSLATIONS.put("Trinket", getString(R.string.cat_trinket));
         TAG_TRANSLATIONS.put("Jungle", getString(R.string.cat_jungle));
         TAG_TRANSLATIONS.put("Lane", getString(R.string.cat_lane));
+        TAG_TRANSLATIONS.put("Support", getString(R.string.cat_support));
     }
 
     private static final Map<String, String> CATEGORY_ALIASES = new HashMap<>();
@@ -136,33 +139,53 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private final Map<String, String> preferredCategoryImages = new HashMap<>();
+    private final Map<String, Integer> categoryDrawableImages = new HashMap<>();
+    
     private void setupPreferredImages() {
-        preferredCategoryImages.put(getString(R.string.cat_ad), "1036");           // Long Sword
-        preferredCategoryImages.put(getString(R.string.cat_ap), "3089");           // Rabadon's Deathcap
-        preferredCategoryImages.put(getString(R.string.cat_health), "1028");       // Ruby Crystal
-        preferredCategoryImages.put(getString(R.string.cat_armor_pen), "3035");    // Last Whisper
-        preferredCategoryImages.put(getString(R.string.cat_magic_pen), "4630");    // Blighting Jewel
-        preferredCategoryImages.put(getString(R.string.cat_life_steal), "3072");   // Bloodthirster
-        preferredCategoryImages.put(getString(R.string.cat_health_regen), "3083"); // Warmog's Armor
-        preferredCategoryImages.put(getString(R.string.cat_speed_no_boots), "3066"); // Winged Moonplate
-        preferredCategoryImages.put(getString(R.string.cat_tenacity), "3053");     // Sterak's Gage
-        preferredCategoryImages.put(getString(R.string.cat_active), "3157");       // Zhonya's Hourglass
-        preferredCategoryImages.put(getString(R.string.cat_aura), "3068");         // Sunfire Aegis
-        preferredCategoryImages.put(getString(R.string.cat_on_hit), "6672");       // Kraken Slayer
-        preferredCategoryImages.put(getString(R.string.cat_jungle), "1103");       // Mosstomper Seedling
-        preferredCategoryImages.put(getString(R.string.cat_omnivamp), "4633");     // Riftmaker
-        preferredCategoryImages.put(getString(R.string.cat_anti_heal), "3165");    // Morellonomicon
-        preferredCategoryImages.put(getString(R.string.cat_anti_shield), "6695");  // Serpent's Fang
-        preferredCategoryImages.put(getString(R.string.cat_lethality), "3134");    // Serrated Dirk
-        preferredCategoryImages.put(getString(R.string.cat_spellblade), "3057");   // Sheen
-        preferredCategoryImages.put(getString(R.string.cat_lifeline), "6673");     // Immortal Shieldbow
-        preferredCategoryImages.put(getString(R.string.cat_shield), "3190");       // Locket of the Iron Solari
+        
+        // Drawable resources for categories
+        categoryDrawableImages.put(getString(R.string.cat_ad), R.drawable.ic_stat_ad);
+        categoryDrawableImages.put(getString(R.string.cat_ap), R.drawable.ic_stat_ap);
+        categoryDrawableImages.put(getString(R.string.cat_health), R.drawable.ic_stat_health);
+        categoryDrawableImages.put(getString(R.string.cat_armor_pen), R.drawable.ic_stat_armor_pen);
+        categoryDrawableImages.put(getString(R.string.cat_magic_pen), R.drawable.ic_stat_magic_pen);
+        categoryDrawableImages.put(getString(R.string.cat_life_steal), R.drawable.ic_stat_lifesteal);
+        categoryDrawableImages.put(getString(R.string.cat_health_regen), R.drawable.ic_stat_hp_regen);
+        categoryDrawableImages.put(getString(R.string.cat_speed_no_boots), R.drawable.ic_stat_move_speed);
+        categoryDrawableImages.put(getString(R.string.cat_tenacity), R.drawable.ic_stat_tenacity);
+        categoryDrawableImages.put(getString(R.string.cat_active), R.drawable.ic_stat_active);
+        categoryDrawableImages.put(getString(R.string.cat_aura), R.drawable.ic_stat_aura);
+        categoryDrawableImages.put(getString(R.string.cat_on_hit), R.drawable.ic_stat_on_hit);
+        categoryDrawableImages.put(getString(R.string.cat_jungle), R.drawable.role_jungle);
+        categoryDrawableImages.put(getString(R.string.cat_omnivamp), R.drawable.ic_stat_vamp);
+        categoryDrawableImages.put(getString(R.string.cat_anti_heal), R.drawable.ic_stat_anti_heal);
+        categoryDrawableImages.put(getString(R.string.cat_anti_shield), R.drawable.ic_stat_anti_shield);
+        categoryDrawableImages.put(getString(R.string.cat_lethality), R.drawable.ic_stat_armor_pen);
+        categoryDrawableImages.put(getString(R.string.cat_spellblade), R.drawable.ic_stat_spellblade);
+        categoryDrawableImages.put(getString(R.string.cat_lifeline), R.drawable.ic_stat_lifeline);
+        categoryDrawableImages.put(getString(R.string.cat_support), R.drawable.role_support);
+        categoryDrawableImages.put(getString(R.string.cat_boots), R.drawable.ic_stat_boots);
+        categoryDrawableImages.put(getString(R.string.cat_mana), R.drawable.ic_stat_mana);
+        categoryDrawableImages.put(getString(R.string.cat_mana_regen), R.drawable.ic_stat_mana_regen);
+        categoryDrawableImages.put(getString(R.string.cat_gold_per), R.drawable.ic_stat_gold);
+        categoryDrawableImages.put(getString(R.string.cat_ability_haste), R.drawable.ic_stat_haste);
+        categoryDrawableImages.put(getString(R.string.cat_armor), R.drawable.ic_stat_armor);
+        categoryDrawableImages.put(getString(R.string.cat_mr), R.drawable.ic_stat_mr);
+        categoryDrawableImages.put(getString(R.string.cat_as), R.drawable.ic_stat_attack_speed);
+        categoryDrawableImages.put(getString(R.string.cat_crit), R.drawable.ic_stat_crit);
+        categoryDrawableImages.put(getString(R.string.cat_vision), R.drawable.ic_stat_vision);
+        categoryDrawableImages.put(getString(R.string.cat_slow), R.drawable.ic_stat_slow);
+
+
+
+
     }
 
     private final Map<String, String> categoryDescriptions = new HashMap<>();
     private void setupCategoryDescriptions() {
         categoryDescriptions.put(getString(R.string.cat_ad), "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
         categoryDescriptions.put(getString(R.string.cat_ap), "Augmente les dégâts de vos compétences magiques.");
+        categoryDescriptions.put(getString(R.string.cat_support), "Objets de départ pour les supports qui évoluent au fil de la partie.");
         categoryDescriptions.put(getString(R.string.cat_health), "Augmente votre santé maximale pour subir plus de dégâts.");
         // Descriptions are static in logic but keys must match current language headers
         // Ideally should externalize descriptions too but keeping it simple for now as requested keys fix
@@ -174,6 +197,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         CATEGORY_ORDER.clear();
         CATEGORY_ORDER.addAll(Arrays.asList(
             getString(R.string.cat_boots),
+            getString(R.string.cat_support),
             getString(R.string.cat_ad),
             getString(R.string.cat_ap),
             getString(R.string.cat_lethality),
@@ -574,6 +598,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             // Temporary map to group items by tag
             HashMap<String, List<Item>> tempMap = new HashMap<>();
 
+            // DEBUG: count items that pass ALL filters (counted once)
+            Set<String> passedFilterIds = new HashSet<>();
+
             // Pre-process: Sort by ID to prioritize standard items and Deduplicate by Name
             List<Item> sortedItems = new ArrayList<>();
             for (Map.Entry<String, Item> entry : data.entrySet()) {
@@ -594,6 +621,21 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             });
 
             Set<String> seenNames = new HashSet<>();
+            
+            // Blacklisted IDs to remove
+            Set<String> blacklistedIds = new HashSet<>(Arrays.asList(
+                "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138", "2139", "2140", "2055","2051","223184","3112","3177", "3184", "2141",
+                "3170", "3171", "3172", "3173", "3174", "3175"
+            ));
+
+            Set<String> allowedWithInto = new HashSet<>(Arrays.asList(
+                "3111", "3020", "3158", "3006", "3047", "3009",
+                "3876", "3877", "3869", "3870", "3871"
+            ));
+
+            Set<String> supportItems = new HashSet<>(Arrays.asList(
+                "3876", "3877", "3869", "3870", "3871"
+            ));
 
             for (Item item : sortedItems) {
                 // Filter out items without name or generic/internal items
@@ -602,6 +644,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 // Deduplicate by Name (Case insensitive logic if needed, but strict name usually works)
                 if (seenNames.contains(item.getName())) continue;
                 seenNames.add(item.getName());
+                
+                // Exclude blacklisted IDs
+                if (item.getId() != null && blacklistedIds.contains(item.getId())) {
+                    continue;
+                }
 
                 // map 11 is Summoner's Rift
                 if (item.getMaps() == null || !Boolean.TRUE.equals(item.getMaps().get("11"))) {
@@ -609,8 +656,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 }
 
                 // Exclude non-purchasable items or hidden items
-                if (!item.isInStore()) continue;
-                if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
+                boolean isSupportItem = item.getId() != null && supportItems.contains(item.getId());
+                if (!isSupportItem) {
+                    if (!item.isInStore()) continue;
+                    if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
+                }
 
                 // Ensure we don't show required champion items unless necessary
                 if (item.getRequiredChampion() != null) continue;
@@ -624,7 +674,24 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 if (item.getName().toLowerCase().contains("obsidienne")) {
                     continue;
                 }
-                
+
+                // ❌ Exclude items that have an "into" attribute
+                // We ONLY want items where "into" does NOT exist in the JSON
+                if (item.getInto() != null && !allowedWithInto.contains(item.getId())) {
+                    continue;
+                }
+
+                // ✅ Item passed ALL filters → count it ONCE
+                if (item.getId() != null) {
+                    passedFilterIds.add(item.getId());
+                }
+
+                // Custom: Support Items Logic
+                if (item.getId() != null && supportItems.contains(item.getId())) {
+                    addToMap(tempMap, getString(R.string.cat_support), item);
+                    continue; 
+                }
+
                 // Map items to tags
                 List<String> tags = item.getTags();
                 if (tags == null || tags.isEmpty()) continue;
@@ -753,7 +820,12 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     representativeItems.put(header, repItem);
                 }
             }
-            
+
+            android.util.Log.d(TAG,
+                    "Items passing filters (map 11 + no 'into'): " + passedFilterIds.size()
+            );
+
+
             // Post result to UI Thread
             runOnUiThread(() -> {
                 // Save results
@@ -768,7 +840,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 originalDataChild = new HashMap<>(listDataChild);
 
                 // Set adapter
-                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion, representativeItems, category -> {
+                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion, representativeItems, categoryDrawableImages, category -> {
                      showOverlay(category);
                 });
                 

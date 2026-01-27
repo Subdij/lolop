@@ -14,6 +14,8 @@ public class Item implements Serializable {
     private Image image;
     private List<String> tags;
     private Gold gold;
+    private List<String> into;
+
     private Map<String, Boolean> maps;
     private Boolean inStore;
     private String requiredChampion;
@@ -26,6 +28,8 @@ public class Item implements Serializable {
     public Image getImage() { return image; }
     public List<String> getTags() { return tags; }
     public Gold getGold() { return gold; }
+    public List<String> getInto() { return into; }
+
     public Map<String, Boolean> getMaps() { return maps; }
     public boolean isInStore() { return inStore == null || inStore; } // Default to true
     public String getRequiredChampion() { return requiredChampion; }
