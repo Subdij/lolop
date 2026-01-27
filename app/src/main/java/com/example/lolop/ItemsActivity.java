@@ -83,6 +83,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         TAG_TRANSLATIONS.put("Trinket", getString(R.string.cat_trinket));
         TAG_TRANSLATIONS.put("Jungle", getString(R.string.cat_jungle));
         TAG_TRANSLATIONS.put("Lane", getString(R.string.cat_lane));
+        TAG_TRANSLATIONS.put("Support", getString(R.string.cat_support));
     }
 
     private static final Map<String, String> CATEGORY_ALIASES = new HashMap<>();
@@ -159,12 +160,14 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         preferredCategoryImages.put(getString(R.string.cat_spellblade), "3057");   // Sheen
         preferredCategoryImages.put(getString(R.string.cat_lifeline), "6673");     // Immortal Shieldbow
         preferredCategoryImages.put(getString(R.string.cat_shield), "3190");       // Locket of the Iron Solari
+        preferredCategoryImages.put(getString(R.string.cat_support), "3869");      // Support Item
     }
 
     private final Map<String, String> categoryDescriptions = new HashMap<>();
     private void setupCategoryDescriptions() {
         categoryDescriptions.put(getString(R.string.cat_ad), "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
         categoryDescriptions.put(getString(R.string.cat_ap), "Augmente les dégâts de vos compétences magiques.");
+        categoryDescriptions.put(getString(R.string.cat_support), "Objets de départ pour les supports qui évoluent au fil de la partie.");
         categoryDescriptions.put(getString(R.string.cat_health), "Augmente votre santé maximale pour subir plus de dégâts.");
         // Descriptions are static in logic but keys must match current language headers
         // Ideally should externalize descriptions too but keeping it simple for now as requested keys fix
@@ -176,6 +179,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         CATEGORY_ORDER.clear();
         CATEGORY_ORDER.addAll(Arrays.asList(
             getString(R.string.cat_boots),
+            getString(R.string.cat_support),
             getString(R.string.cat_ad),
             getString(R.string.cat_ap),
             getString(R.string.cat_lethality),
@@ -607,7 +611,12 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             ));
 
             Set<String> allowedWithInto = new HashSet<>(Arrays.asList(
-                "3111", "3020", "3158", "3006", "3047", "3009"
+                "3111", "3020", "3158", "3006", "3047", "3009",
+                "3876", "3877", "3869", "3870", "3871"
+            ));
+
+            Set<String> supportItems = new HashSet<>(Arrays.asList(
+                "3876", "3877", "3869", "3870", "3871"
             ));
 
             for (Item item : sortedItems) {
@@ -629,8 +638,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 }
 
                 // Exclude non-purchasable items or hidden items
-                if (!item.isInStore()) continue;
-                if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
+                boolean isSupportItem = item.getId() != null && supportItems.contains(item.getId());
+                if (!isSupportItem) {
+                    if (!item.isInStore()) continue;
+                    if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
+                }
 
                 // Ensure we don't show required champion items unless necessary
                 if (item.getRequiredChampion() != null) continue;
@@ -656,7 +668,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     passedFilterIds.add(item.getId());
                 }
 
-
+                // Custom: Support Items Logic
+                if (item.getId() != null && supportItems.contains(item.getId())) {
+                    addToMap(tempMap, getString(R.string.cat_support), item);
+                    continue; 
+                }
 
                 // Map items to tags
                 List<String> tags = item.getTags();

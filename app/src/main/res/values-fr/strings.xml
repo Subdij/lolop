@@ -45,4 +45,5 @@
     <string name="cat_spellblade">Lame enchantée</string>
     <string name="cat_lifeline">Lien vital</string>
     <string name="cat_shield">Bouclier</string>
+    <string name="cat_support">Support</string>
 </resources>
