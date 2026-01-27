@@ -599,6 +599,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             });
 
             Set<String> seenNames = new HashSet<>();
+            
+            // Blacklisted IDs to remove
+            Set<String> blacklistedIds = new HashSet<>(Arrays.asList(
+                "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138", "2139", "2140", "2055","2051","223184","3112","3177", "3184", "2141"
+            ));
 
             for (Item item : sortedItems) {
                 // Filter out items without name or generic/internal items
@@ -607,6 +612,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 // Deduplicate by Name (Case insensitive logic if needed, but strict name usually works)
                 if (seenNames.contains(item.getName())) continue;
                 seenNames.add(item.getName());
+                
+                // Exclude blacklisted IDs
+                if (item.getId() != null && blacklistedIds.contains(item.getId())) {
+                    continue;
+                }
 
                 // map 11 is Summoner's Rift
                 if (item.getMaps() == null || !Boolean.TRUE.equals(item.getMaps().get("11"))) {
