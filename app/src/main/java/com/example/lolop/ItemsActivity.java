@@ -602,7 +602,12 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             
             // Blacklisted IDs to remove
             Set<String> blacklistedIds = new HashSet<>(Arrays.asList(
-                "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138", "2139", "2140", "2055","2051","223184","3112","3177", "3184", "2141"
+                "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138", "2139", "2140", "2055","2051","223184","3112","3177", "3184", "2141",
+                "3170", "3171", "3172", "3173", "3174", "3175"
+            ));
+
+            Set<String> allowedWithInto = new HashSet<>(Arrays.asList(
+                "3111", "3020", "3158", "3006", "3047", "3009"
             ));
 
             for (Item item : sortedItems) {
@@ -642,7 +647,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
                 // ❌ Exclude items that have an "into" attribute
                 // We ONLY want items where "into" does NOT exist in the JSON
-                if (item.getInto() != null) {
+                if (item.getInto() != null && !allowedWithInto.contains(item.getId())) {
                     continue;
                 }
 
