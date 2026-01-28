@@ -11,18 +11,28 @@ import androidx.core.app.NotificationCompat;
 public class ManaReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "LOL_NOTIF";
 
+    /**
+     * Reçoit l'alerte de batterie faible du système.
+     * Affiche une notification humoristique "Mana Faible".
+     */
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_BATTERY_LOW.equals(intent.getAction())) {
-            showNotification(context, "Mana Faible !", "Invocateur, votre batterie est basse. Finissez vite votre recherche !");
+            showNotification(context, "Mana Faible !",
+                    "Invocateur, votre batterie est basse. Finissez vite votre recherche !");
         }
     }
 
+    /**
+     * Crée et affiche une notification locale.
+     * Configure le canal de notification pour Android O+.
+     */
     private void showNotification(Context context, String title, String message) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "LoL Alerts", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "LoL Alerts",
+                    NotificationManager.IMPORTANCE_DEFAULT);
             manager.createNotificationChannel(channel);
         }
 

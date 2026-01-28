@@ -10,7 +10,6 @@ public class Item implements Serializable {
     private String description;
     private String plaintext;
 
-
     private Image image;
     private List<String> tags;
     private Gold gold;
@@ -20,23 +19,77 @@ public class Item implements Serializable {
     private Boolean inStore;
     private String requiredChampion;
 
-    public void setId(String id) { this.id = id; }
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public String getPlaintext() { return plaintext; }
-    public Image getImage() { return image; }
-    public List<String> getTags() { return tags; }
-    public Gold getGold() { return gold; }
-    public List<String> getInto() { return into; }
+    /** Définit l'identifiant de l'objet. */
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public Map<String, Boolean> getMaps() { return maps; }
-    public boolean isInStore() { return inStore == null || inStore; } // Default to true
-    public String getRequiredChampion() { return requiredChampion; }
+    /** Retourne l'identifiant de l'objet. */
+    public String getId() {
+        return id;
+    }
+
+    /** Retourne le nom de l'objet. */
+    public String getName() {
+        return name;
+    }
+
+    /** Retourne la description HTML de l'objet. */
+    public String getDescription() {
+        return description;
+    }
+
+    /** Retourne la description texte brut de l'objet. */
+    public String getPlaintext() {
+        return plaintext;
+    }
+
+    /** Retourne les informations sur l'image de l'objet. */
+    public Image getImage() {
+        return image;
+    }
+
+    /** Retourne la liste des tags de l'objet. */
+    public List<String> getTags() {
+        return tags;
+    }
+
+    /** Retourne les informations sur le prix de l'objet. */
+    public Gold getGold() {
+        return gold;
+    }
+
+    /**
+     * Retourne la liste des IDs des objets en lesquels cet objet peut être
+     * transformé.
+     */
+    public List<String> getInto() {
+        return into;
+    }
+
+    /** Retourne la liste des cartes où l'objet est disponible. */
+    public Map<String, Boolean> getMaps() {
+        return maps;
+    }
+
+    /** Indique si l'objet est disponible dans la boutique. */
+    public boolean isInStore() {
+        return inStore == null || inStore;
+    } // Default to true
+
+    /**
+     * Retourne le nom du champion requis pour acheter cet objet (si applicable).
+     */
+    public String getRequiredChampion() {
+        return requiredChampion;
+    }
 
     public static class Image implements Serializable {
         private String full;
-        public String getFull() { return full; }
+
+        public String getFull() {
+            return full;
+        }
     }
 
     public static class Gold implements Serializable {
@@ -44,10 +97,21 @@ public class Item implements Serializable {
         private int base;
         private int sell;
         private boolean purchasable;
-        
-        public int getTotal() { return total; }
-        public int getBase() { return base; }
-        public int getSell() { return sell; }
-        public boolean isPurchasable() { return purchasable; }
+
+        public int getTotal() {
+            return total;
+        }
+
+        public int getBase() {
+            return base;
+        }
+
+        public int getSell() {
+            return sell;
+        }
+
+        public boolean isPurchasable() {
+            return purchasable;
+        }
     }
 }

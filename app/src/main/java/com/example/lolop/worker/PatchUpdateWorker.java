@@ -30,6 +30,12 @@ public class PatchUpdateWorker extends Worker {
         super(context, workerParams);
     }
 
+    /**
+     * Exécute la tâche de fond :
+     * 1. Vérifie la dernière version du jeu via l'API.
+     * 2. Si une nouvelle version est disponible, télécharge les données (champions, items).
+     * 3. Met à jour les fichiers locaux et notifie l'utilisateur.
+     */
     @NonNull
     @Override
     public Result doWork() {
@@ -90,6 +96,10 @@ public class PatchUpdateWorker extends Worker {
         }
     }
 
+    /**
+     * Affiche une notification système pour informer de la mise à jour.
+     * Ouvre l'application lors du clic sur la notification.
+     */
     private void showNotification(String title, String message) {
         Context context = getApplicationContext();
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

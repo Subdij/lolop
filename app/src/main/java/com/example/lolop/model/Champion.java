@@ -21,18 +21,53 @@ public class Champion implements Parcelable {
     private List<String> enemytips;
 
     // Getters
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public String getTitle() { return title; }
-    public String getBlurb() { return blurb; }
-    public String getLore() { return lore; }
-    public Info getInfo() { return info; }
-    public Image getImage() { return image; }
-    public List<String> getTags() { return tags; }
-    public List<Spell> getSpells() { return spells; }
-    public Passive getPassive() { return passive; }
-    public List<String> getAllytips() { return allytips; }
-    public List<String> getEnemytips() { return enemytips; }
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getBlurb() {
+        return blurb;
+    }
+
+    public String getLore() {
+        return lore;
+    }
+
+    public Info getInfo() {
+        return info;
+    }
+
+    public Image getImage() {
+        return image;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public List<Spell> getSpells() {
+        return spells;
+    }
+
+    public Passive getPassive() {
+        return passive;
+    }
+
+    public List<String> getAllytips() {
+        return allytips;
+    }
+
+    public List<String> getEnemytips() {
+        return enemytips;
+    }
 
     protected Champion(Parcel in) {
         id = in.readString();
@@ -50,6 +85,7 @@ public class Champion implements Parcelable {
         enemytips = in.createStringArrayList();
     }
 
+    /** Aplatit l'objet Champion dans un Parcel. */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id);
@@ -67,6 +103,7 @@ public class Champion implements Parcelable {
         dest.writeStringList(enemytips);
     }
 
+    /** Description du contenu pour Parcelable. */
     @Override
     public int describeContents() {
         return 0;
@@ -89,8 +126,12 @@ public class Champion implements Parcelable {
         private int defense;
         private int magic;
         private int difficulty;
-        public int getDifficulty() { return difficulty; }
 
+        public int getDifficulty() {
+            return difficulty;
+        }
+
+        /** Constructeur Parcelable pour Info. */
         protected Info(Parcel in) {
             attack = in.readInt();
             defense = in.readInt();
@@ -126,7 +167,10 @@ public class Champion implements Parcelable {
 
     public static class Image implements Parcelable {
         private String full;
-        public String getFull() { return full; }
+
+        public String getFull() {
+            return full;
+        }
 
         protected Image(Parcel in) {
             full = in.readString();
@@ -161,11 +205,24 @@ public class Champion implements Parcelable {
         private String description;
         private String tooltip;
         private Image image;
-        public String getName() { return name; }
-        public String getDescription() { return description; }
-        public String getTooltip() { return tooltip; }
-        public Image getImage() { return image; }
 
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getTooltip() {
+            return tooltip;
+        }
+
+        public Image getImage() {
+            return image;
+        }
+
+        /** Constructeur Parcelable pour Spell. */
         protected Spell(Parcel in) {
             id = in.readString();
             name = in.readString();
@@ -205,10 +262,20 @@ public class Champion implements Parcelable {
         private String name;
         private String description;
         private Image image;
-        public String getName() { return name; }
-        public String getDescription() { return description; }
-        public Image getImage() { return image; }
 
+        public String getName() {
+            return name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public Image getImage() {
+            return image;
+        }
+
+        /** Constructeur Parcelable pour Passive. */
         protected Passive(Parcel in) {
             name = in.readString();
             description = in.readString();

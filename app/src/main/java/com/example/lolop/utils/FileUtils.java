@@ -9,6 +9,9 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 
 public class FileUtils {
+    /**
+     * Sauvegarde une chaîne de caractères dans un fichier local privé.
+     */
     public static void saveStringToFile(Context context, String fileName, String content) {
         try (FileOutputStream fos = context.openFileOutput(fileName, Context.MODE_PRIVATE)) {
             fos.write(content.getBytes());
@@ -17,6 +20,9 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Lit le contenu d'un fichier local sous forme de chaîne de caractères.
+     */
     public static String readStringFromFile(Context context, String fileName) {
         StringBuilder stringBuilder = new StringBuilder();
         try (FileInputStream fis = context.openFileInput(fileName);
@@ -33,6 +39,9 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Vérifie si un fichier existe dans le stockage interne de l'application.
+     */
     public static boolean fileExists(Context context, String fileName) {
         File file = context.getFileStreamPath(fileName);
         return file.exists();

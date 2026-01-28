@@ -29,17 +29,27 @@ public class ItemAdapter extends BaseExpandableListAdapter {
         this.currentVersion = currentVersion;
     }
 
+    /**
+     * Met à jour les données de l'adaptateur et rafraîchit la liste.
+     */
     public void updateData(List<String> listDataHeader, HashMap<String, List<Item>> listChildData) {
         this.listDataHeader = listDataHeader;
         this.listDataChild = listChildData;
         notifyDataSetChanged();
     }
 
+    /**
+     * Retourne le nombre de groupes (catégories) dans la liste.
+     */
     @Override
     public int getGroupCount() {
         return this.listDataHeader != null ? this.listDataHeader.size() : 0;
     }
 
+    /**
+     * Retourne le nombre d'éléments dans un groupe donné.
+     * Pour la catégorie "Tout", retourne 1 car elle contient une grille unique.
+     */
     @Override
     public int getChildrenCount(int groupPosition) {
         if (listDataHeader == null || groupPosition >= listDataHeader.size())
@@ -56,11 +66,17 @@ public class ItemAdapter extends BaseExpandableListAdapter {
         return items != null ? items.size() : 0;
     }
 
+    /**
+     * Retourne l'objet correspondant au groupe (le titre de la catégorie).
+     */
     @Override
     public Object getGroup(int groupPosition) {
         return this.listDataHeader.get(groupPosition);
     }
 
+    /**
+     * Retourne l'objet enfant (Item) à une position donnée.
+     */
     @Override
     public Object getChild(int groupPosition, int childPosition) {
         String header = listDataHeader.get(groupPosition);
@@ -86,16 +102,27 @@ public class ItemAdapter extends BaseExpandableListAdapter {
         return false;
     }
 
+    /**
+     * Retourne le nombre de types de vues hétérogènes.
+     * 2 types : Item normal et Conteneur Grille (pour "Tout").
+     */
     @Override
     public int getChildTypeCount() {
         return 2; // Normal Item and Grid Container
     }
 
+    /**
+     * Retourne le type de vue pour un enfant donné.
+     * Type 1 pour "Tout" (Grille), Type 0 pour les autres (Liste).
+     */
     @Override
     public int getChildType(int groupPosition, int childPosition) {
         return context.getString(R.string.category_all).equals(listDataHeader.get(groupPosition)) ? 1 : 0;
     }
 
+    /**
+     * Crée la vue pour l'en-tête de groupe (Catégorie).
+     */
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         String headerTitle = (String) getGroup(groupPosition);
@@ -112,6 +139,11 @@ public class ItemAdapter extends BaseExpandableListAdapter {
         return convertView;
     }
 
+    /**
+     * Crée la vue pour un enfant.
+     * Gère soit l'affichage d'un item individuel, soit l'affichage de la grille
+     * pour la catégorie "Tout".
+     */
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView,
             ViewGroup parent) {
@@ -166,6 +198,9 @@ public class ItemAdapter extends BaseExpandableListAdapter {
         }
     }
 
+    /**
+     * Indique si l'enfant est sélectionnable.
+     */
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;

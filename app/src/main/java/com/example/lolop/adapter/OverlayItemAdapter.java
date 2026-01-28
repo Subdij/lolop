@@ -32,10 +32,16 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
         }
     }
 
+    /**
+     * Définit l'écouteur pour les clics sur les items.
+     */
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
 
+    /**
+     * Crée la vue pour un objet dans la grille overlay.
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -43,27 +49,31 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
         return new ViewHolder(view);
     }
 
+    /**
+     * Affiche l'icône et le nom de l'objet et configure le clic.
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Item item = items.get(position);
-        
+
         holder.tvName.setText(item.getName());
-        
+
         // Load image
         if (item.getImage() != null) {
-            String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/item/" + item.getImage().getFull();
+            String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/item/"
+                    + item.getImage().getFull();
             if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
                 Glide.with(context)
-                     .load(imageUrl)
-                     .placeholder(R.color.lol_blue_light)
-                     .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
-                     .dontAnimate()
-                     .into(holder.ivIcon);
+                        .load(imageUrl)
+                        .placeholder(R.color.lol_blue_light)
+                        .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                        .dontAnimate()
+                        .into(holder.ivIcon);
             } else {
                 Glide.with(context)
-                     .load(imageUrl)
-                     .placeholder(R.color.lol_blue_light)
-                     .into(holder.ivIcon);
+                        .load(imageUrl)
+                        .placeholder(R.color.lol_blue_light)
+                        .into(holder.ivIcon);
             }
         }
 
@@ -74,6 +84,9 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
         });
     }
 
+    /**
+     * Retourne le nombre total d'objets dans la liste.
+     */
     @Override
     public int getItemCount() {
         return items.size();
@@ -82,7 +95,7 @@ public class OverlayItemAdapter extends RecyclerView.Adapter<OverlayItemAdapter.
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivIcon;
         TextView tvName;
-        
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             ivIcon = itemView.findViewById(R.id.ivItemIcon);

@@ -18,6 +18,10 @@ public class PatchNoteActivity extends BaseActivity {
     private ActivityPatchNoteBinding binding;
     private String currentVersion = "14.5.1";
 
+    /**
+     * Initialise l'activité d'affichage des notes de patch.
+     * Configure la WebView, gère la navigation et charge la page appropriée.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,11 +57,18 @@ public class PatchNoteActivity extends BaseActivity {
         });
     }
 
+    /**
+     * Attache le contexte de base pour la gestion de la langue.
+     */
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(LocaleHelper.onAttach(newBase));
     }
 
+    /**
+     * Configure la WebView pour l'affichage des notes de patch.
+     * Active le JavaScript, le cache, et gère les erreurs de chargement.
+     */
     private void setupWebView() {
         WebSettings webSettings = binding.webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -99,6 +110,10 @@ public class PatchNoteActivity extends BaseActivity {
         });
     }
 
+    /**
+     * Injecte du code CSS et JavaScript dans la page chargée.
+     * Permet de masquer les éléments inutiles (headers, footers, menus) du site officiel.
+     */
     private void injectCSS(WebView view) {
         String css = "nav, header, footer, #riotbar-bar, #riotbar-header, #riotbar-footer, .riotbar-navbar, .riotbar-mobile-bar, "
                 +
@@ -148,15 +163,25 @@ public class PatchNoteActivity extends BaseActivity {
         view.evaluateJavascript(js, null);
     }
 
+    /**
+     * Charge l'URL des notes de patch correspondant à la version actuelle.
+     */
     private void loadPatchNotes() {
         String url = constructPatchUrl(currentVersion);
         binding.webView.loadUrl(url);
     }
 
+    /**
+     * Construit l'URL complète pour les notes de patch d'une version donnée.
+     */
     private String constructPatchUrl(String version) {
         return getPatchNotesParams(false);
     }
 
+    /**
+     * Génère l'URL ou les paramètres d'URL pour accéder aux notes de patch.
+     * Gère la différence de format d'URL entre l'anglais et le français.
+     */
     private String getPatchNotesParams(boolean tagsOnly) {
         String lang = LocaleHelper.getLanguage(this);
         // Use "en-gb" for English to match EU-style paths often used, or "en-us".

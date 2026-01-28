@@ -45,12 +45,20 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.listener = listener;
     }
 
+    /**
+     * Met à jour les données de l'adaptateur et notifie le changement pour
+     * rafraîchir l'affichage.
+     */
     public void updateData(List<String> categories, HashMap<String, List<Item>> categoryItems) {
         this.categories = categories;
         this.categoryItems = categoryItems;
         notifyDataSetChanged();
     }
 
+    /**
+     * Détermine le type de vue selon la position.
+     * La catégorie "Tout" utilise une mise en page différente (section complète).
+     */
     @Override
     public int getItemViewType(int position) {
         if (context.getString(R.string.category_all).equals(categories.get(position))) {
@@ -59,6 +67,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return VIEW_TYPE_CARD;
     }
 
+    /**
+     * Crée le ViewHolder approprié (Section "Tout" ou Carte Catégorie) selon le
+     * type de vue.
+     */
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -71,6 +83,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
+    /**
+     * Lie les données à la vue (affiche le titre de la catégorie et configure le
+     * clic ou la grille).
+     */
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         String category = categories.get(position);
@@ -88,6 +104,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     // ViewHolder for "Tout" - Shows as a full section with grid
+    /**
+     * ViewHolder pour la section spéciale "Tout", qui affiche tous les objets dans
+     * une grille imbriquée.
+     */
     class ToutViewHolder extends RecyclerView.ViewHolder {
         RecyclerView rvGrid;
         TextView tvHeader;
@@ -115,6 +135,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     // ViewHolder for Categories - Shows as a clickable card
+    /**
+     * ViewHolder pour les catégories standard, affichées sous forme de cartes
+     * cliquables avec icône.
+     */
     class CategoryViewHolder extends RecyclerView.ViewHolder {
         ImageView ivIcon;
         TextView tvName;
@@ -131,6 +155,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             });
         }
 
+        /**
+         * Affiche la catégorie et charge l'image appropriée (ressource locale ou image
+         * d'item représentatif).
+         */
         void bind(String category) {
             tvName.setText(category);
 

@@ -28,6 +28,9 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         void onChampionClick(Champion champion);
     }
 
+    /**
+     * Définit l'écouteur pour les clics sur les items de champion.
+     */
     public void setOnChampionClickListener(OnChampionClickListener listener) {
         this.listener = listener;
     }
@@ -36,35 +39,57 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         this.version = version;
     }
 
+    /**
+     * Met à jour la version de l'API utilisée pour charger les images des
+     * champions.
+     */
     public void setVersion(String version) {
         this.version = version;
     }
 
+    /**
+     * Met à jour la liste des identifiants de champions favoris et rafraîchit
+     * l'affichage.
+     */
     public void setFavorites(java.util.Set<String> favoriteIds) {
         this.favoriteIds = favoriteIds;
         notifyDataSetChanged();
     }
 
+    /**
+     * Définit la liste complète des champions et applique les filtres actuels.
+     */
     public void setChampions(List<Champion> champions) {
         this.championsFull = new ArrayList<>(champions);
         applyFilters();
     }
 
+    /**
+     * Filtre la liste des champions par nom (recherche textuelle).
+     */
     public void filter(String text) {
         this.currentSearchText = text.toLowerCase();
         applyFilters();
     }
 
+    /**
+     * Filtre la liste des champions par rôle (Top, Jungle, Mid, Bot, Support, ou
+     * Favoris).
+     */
     public void setRoleFilter(String role) {
         this.currentRoleFilter = role;
         applyFilters();
     }
 
+    /**
+     * Applique les filtres de recherche et de rôle sur la liste complète et met à
+     * jour l'affichage.
+     */
     private void applyFilters() {
         List<Champion> filteredList = new ArrayList<>();
         for (Champion item : championsFull) {
             boolean matchesSearch = item.getName().toLowerCase().contains(currentSearchText);
-            
+
             boolean matchesRole = false;
             if (currentRoleFilter.equals("All")) {
                 matchesRole = true;
@@ -73,7 +98,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
             } else {
                 matchesRole = ChampionMapper.isChampionInRole(item.getId(), currentRoleFilter);
             }
-            
+
             if (matchesSearch && matchesRole) {
                 filteredList.add(item);
             }
@@ -81,50 +106,64 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
         updateList(filteredList);
     }
 
+    /**
+     * Met à jour la liste affichée en utilisant DiffUtil pour calculer les
+     * différences et animer les changements.
+     */
     private void updateList(List<Champion> newList) {
-        androidx.recyclerview.widget.DiffUtil.DiffResult diffResult = androidx.recyclerview.widget.DiffUtil.calculateDiff(new androidx.recyclerview.widget.DiffUtil.Callback() {
-            @Override
-            public int getOldListSize() {
-                return champions.size();
-            }
+        androidx.recyclerview.widget.DiffUtil.DiffResult diffResult = androidx.recyclerview.widget.DiffUtil
+                .calculateDiff(new androidx.recyclerview.widget.DiffUtil.Callback() {
+                    @Override
+                    public int getOldListSize() {
+                        return champions.size();
+                    }
 
-            @Override
-            public int getNewListSize() {
-                return newList.size();
-            }
+                    @Override
+                    public int getNewListSize() {
+                        return newList.size();
+                    }
 
-            @Override
-            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                return champions.get(oldItemPosition).getId().equals(newList.get(newItemPosition).getId());
-            }
+                    @Override
+                    public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                        return champions.get(oldItemPosition).getId().equals(newList.get(newItemPosition).getId());
+                    }
 
-            @Override
-            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                Champion oldItem = champions.get(oldItemPosition);
-                Champion newItem = newList.get(newItemPosition);
-                return oldItem.getName().equals(newItem.getName()) &&
-                       oldItem.getImage().getFull().equals(newItem.getImage().getFull());
-            }
-        });
-        
+                    @Override
+                    public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                        Champion oldItem = champions.get(oldItemPosition);
+                        Champion newItem = newList.get(newItemPosition);
+                        return oldItem.getName().equals(newItem.getName()) &&
+                                oldItem.getImage().getFull().equals(newItem.getImage().getFull());
+                    }
+                });
+
         this.champions = new ArrayList<>(newList);
         diffResult.dispatchUpdatesTo(this);
     }
 
+    /**
+     * Crée le ViewHolder pour un item de champion.
+     */
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemChampionBinding binding = ItemChampionBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        ItemChampionBinding binding = ItemChampionBinding.inflate(LayoutInflater.from(parent.getContext()), parent,
+                false);
         return new ViewHolder(binding);
     }
 
+    /**
+     * Lie les données du champion à la vue.
+     * Affiche le nom, charge l'image, et gère l'état du favori.
+     */
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Champion champion = champions.get(position);
         holder.binding.tvChampionNameDisplay.setText(champion.getName());
 
-        String iconUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/champion/" + champion.getImage().getFull();
-        
+        String iconUrl = "https://ddragon.leagueoflegends.com/cdn/" + version + "/img/champion/"
+                + champion.getImage().getFull();
+
         if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
             Glide.with(holder.itemView.getContext())
                     .load(iconUrl)
@@ -159,6 +198,7 @@ public class ChampionAdapter extends RecyclerView.Adapter<ChampionAdapter.ViewHo
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public final ItemChampionBinding binding;
+
         public ViewHolder(ItemChampionBinding binding) {
             super(binding.getRoot());
             this.binding = binding;

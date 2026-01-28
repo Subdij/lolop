@@ -19,35 +19,56 @@ public class NavbarFragment extends Fragment {
     private String currentVersion = "14.5.1"; // Default
     private BottomNavigationView bottomNavigation;
 
+    /**
+     * Définit la version actuelle du jeu à utiliser lors de la navigation vers
+     * d'autres activités.
+     */
     public void setCurrentVersion(String version) {
         this.currentVersion = version;
     }
 
+    /**
+     * Crée et retourne la hiérarchie de vues associée au fragment.
+     */
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_navbar, container, false);
     }
 
+    /**
+     * Appelé immédiatement après que la vue a été créée.
+     * Initialise la BottomNavigationView et configure son comportement.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         bottomNavigation = view.findViewById(R.id.bottomNavigation);
         setupNavigation();
-        
+
         if (getActivity() != null) {
             updateSelectedTab();
         }
     }
 
+    /**
+     * Appelé lorsque le fragment redevient visible.
+     * Met à jour l'onglet sélectionné pour correspondre à l'activité en cours.
+     */
     @Override
     public void onResume() {
         super.onResume();
         updateSelectedTab();
     }
 
+    /**
+     * Met à jour visuellement l'élément sélectionné dans la barre de navigation
+     * en fonction de l'activité parente actuelle.
+     */
     private void updateSelectedTab() {
-        if (bottomNavigation == null || getActivity() == null) return;
+        if (bottomNavigation == null || getActivity() == null)
+            return;
 
         if (getActivity() instanceof MainActivity) {
             bottomNavigation.getMenu().findItem(R.id.nav_champions).setChecked(true);
@@ -58,15 +79,23 @@ public class NavbarFragment extends Fragment {
         }
     }
 
+    /**
+     * Configure les écouteurs d'événements pour la barre de navigation.
+     * Gère la navigation entre les activités (Champions, Items, Patch Notes).
+     */
     private void setupNavigation() {
         bottomNavigation.setOnItemSelectedListener(item -> {
-            if (getActivity() == null) return false;
+            if (getActivity() == null)
+                return false;
 
             int itemId = item.getItemId();
-            
-            if (getActivity() instanceof MainActivity && itemId == R.id.nav_champions) return true;
-            if (getActivity() instanceof ItemsActivity && itemId == R.id.nav_items) return true;
-            if (getActivity() instanceof PatchNoteActivity && itemId == R.id.nav_patch) return true;
+
+            if (getActivity() instanceof MainActivity && itemId == R.id.nav_champions)
+                return true;
+            if (getActivity() instanceof ItemsActivity && itemId == R.id.nav_items)
+                return true;
+            if (getActivity() instanceof PatchNoteActivity && itemId == R.id.nav_patch)
+                return true;
 
             Intent intent = null;
             if (itemId == R.id.nav_champions) {
@@ -79,13 +108,15 @@ public class NavbarFragment extends Fragment {
 
             if (intent != null) {
                 intent.putExtra("CURRENT_VERSION", currentVersion);
-                // Flag to bring existing activity to front if it exists, to match previous behavior partially
+                // Flag to bring existing activity to front if it exists, to match previous
+                // behavior partially
                 // But generally Standard launch mode creates new.
                 // We keep it simple as per original code.
                 startActivity(intent);
                 getActivity().overridePendingTransition(0, 0);
 
-                // Finish current activity if it's not MainActivity (Standard navigation pattern + matches user request to avoid repeating/stacking too much)
+                // Finish current activity if it's not MainActivity (Standard navigation pattern
+                // + matches user request to avoid repeating/stacking too much)
                 if (!(getActivity() instanceof MainActivity)) {
                     getActivity().finish();
                 }

@@ -53,6 +53,11 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
     private static final int RECORD_AUDIO_REQUEST_CODE = 101;
     private boolean isListening = false;
 
+    /**
+     * Initialise l'activité principale.
+     * Configure le layout, la base de données, les écouteurs, la recherche et lance
+     * la récupération des données.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,12 +94,21 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Appelé à chaque fois que l'activité revient au premier plan.
+     * Rafraîchit la liste des favoris pour refléter les changements potentiels.
+     */
     @Override
     protected void onResume() {
         super.onResume();
         refreshFavorites();
     }
 
+    /**
+     * Recharge la liste des IDs des champions favoris depuis la base de données
+     * locale.
+     * Met à jour l'adaptateur et réorganise l'affichage.
+     */
     private void refreshFavorites() {
         if (db != null) {
             favoriteIds = db.getAllFavorites();
@@ -105,11 +119,19 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Attache le contexte de base pour appliquer la langue choisie par
+     * l'utilisateur.
+     */
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(LocaleHelper.onAttach(newBase));
     }
 
+    /**
+     * Récupère la dernière version du jeu depuis l'API Riot.
+     * Si réussi, met à jour la version et lance le chargement des champions.
+     */
     private void fetchLatestVersion() {
         binding.progressBar.setVisibility(View.VISIBLE);
         RetrofitClient.getApiService().getVersions().enqueue(new Callback<List<String>>() {
@@ -143,6 +165,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         });
     }
 
+    /**
+     * Configure les écouteurs pour les boutons de changement de langue (FR/EN).
+     */
     private void setupLanguageButtons() {
         binding.btnLangFr.setOnClickListener(v -> setLanguage("fr"));
         binding.btnLangEn.setOnClickListener(v -> setLanguage("en"));
@@ -150,6 +175,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         updateLanguageUI(LocaleHelper.getLanguage(this));
     }
 
+    /**
+     * Met à jour l'apparence des boutons de langue (opacité, taille) pour indiquer
+     * la langue active.
+     */
     private void updateLanguageUI(String currentLanguage) {
         float activeScale = 1.0f;
         float inactiveScale = 0.75f;
@@ -176,11 +205,20 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Change la langue de l'application et redémarre l'activité pour appliquer les
+     * changements.
+     */
     private void setLanguage(String language) {
         LocaleHelper.setLocale(this, language);
         recreate();
     }
 
+    /**
+     * Configure l'animation du logo lors du défilement de la liste.
+     * Le logo rétrécit et se déplace légèrement vers le haut ("Sticky Header
+     * effect").
+     */
     private void setupStickyAnimation() {
         binding.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
             // Disable complex animation calculation in power saving mode to save CPU
@@ -214,6 +252,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         });
     }
 
+    /**
+     * Configure les écouteurs de clic pour les icônes de filtrage par rôle.
+     */
     private void setupRoleIcons() {
         binding.ivRoleFavorites.setOnClickListener(v -> toggleRoleFilter(v, "Favorites"));
         binding.ivRoleTop.setOnClickListener(v -> toggleRoleFilter(v, "Top"));
@@ -223,6 +264,11 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         binding.ivRoleSupport.setOnClickListener(v -> toggleRoleFilter(v, "Support"));
     }
 
+    /**
+     * Active ou désactive un filtre de rôle.
+     * Met à jour l'apparence de l'icône sélectionnée et filtre la liste des
+     * champions.
+     */
     private void toggleRoleFilter(View view, String role) {
         if (currentRoleFilter.equals(role)) {
             currentRoleFilter = "All";
@@ -239,6 +285,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         adapter.setRoleFilter(currentRoleFilter);
     }
 
+    /**
+     * Configure la barre de recherche textuelle pour filtrer les champions en temps
+     * réel.
+     */
     private void setupSearch() {
         binding.etSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -257,6 +307,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         });
     }
 
+    /**
+     * Initialise le SpeechRecognizer pour la recherche vocale.
+     */
     private void setupVoiceSearch() {
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -317,6 +370,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         binding.ivMic.setOnClickListener(v -> checkPermissionAndStartVoiceInput());
     }
 
+    /**
+     * Vérifie la permission d'enregistrement audio et lance l'écoute vocale si
+     * permise.
+     */
     private void checkPermissionAndStartVoiceInput() {
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -333,6 +390,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Gère la réponse à la demande de permission microphone.
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
             @NonNull int[] grantResults) {
@@ -346,6 +406,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Traite le texte reconnu par la commande vocale.
+     * Remplit la recherche et ouvre le champion si correspondance exacte.
+     */
     private void processVoiceResult(String query) {
         binding.etSearch.setText(query);
         // Clean query for comparison
@@ -363,6 +427,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Nettoie les ressources (SpeechRecognizer) à la destruction de l'activité.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -371,6 +438,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Initialise le RecyclerView et son adaptateur pour afficher la grille de
+     * champions.
+     */
     private void setupRecyclerView() {
         adapter = new ChampionAdapter(currentVersion);
         adapter.setFavorites(favoriteIds);
@@ -379,6 +450,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         binding.rvChampions.setAdapter(adapter);
     }
 
+    /**
+     * Récupère la liste complète des champions depuis l'API.
+     */
     private void fetchChampions() {
         binding.progressBar.setVisibility(View.VISIBLE);
         String apiLang = LocaleHelper.getApiLanguage(this);
@@ -401,6 +475,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
                 });
     }
 
+    /**
+     * Trie la liste des champions (Favoris en premier, puis alphabétique) et met à
+     * jour l'affichage.
+     */
     private void sortAndDisplayChampions() {
         if (championList == null || championList.isEmpty())
             return;
@@ -423,6 +501,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         adapter.setChampions(sortedList);
     }
 
+    /**
+     * Sauvegarde l'état de l'activité (liste champions, version) pour survivre aux
+     * rotations d'écran.
+     */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -430,6 +512,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         outState.putString("CURRENT_VERSION", currentVersion);
     }
 
+    /**
+     * Met à jour la version affichée dans la barre de navigation inférieure.
+     */
     private void updateNavbarVersion() {
         com.example.lolop.fragments.NavbarFragment navbar = (com.example.lolop.fragments.NavbarFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.bottomNavigation);
@@ -438,6 +523,9 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         }
     }
 
+    /**
+     * Gère le clic sur un champion : ouvre l'activité de détails.
+     */
     @Override
     public void onChampionClick(Champion champion) {
         Intent intent = new Intent(this, DetailChampion.class);
@@ -446,6 +534,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
         startActivity(intent);
     }
 
+    /**
+     * Planifie une tâche de fond (Worker) pour vérifier les mises à jour de patch
+     * périodiquement.
+     */
     private void setupBackgroundWork() {
         PeriodicWorkRequest patchWorkRequest = new PeriodicWorkRequest.Builder(PatchUpdateWorker.class, 6,
                 TimeUnit.HOURS)
@@ -459,6 +551,10 @@ public class MainActivity extends BaseActivity implements ChampionAdapter.OnCham
                 patchWorkRequest);
     }
 
+    /**
+     * Charge la liste des champions depuis le fichier local JSON pour un démarrage
+     * rapide.
+     */
     private void loadLocalChampions() {
         new Thread(() -> {
             String json = FileUtils.readStringFromFile(this, "champions.json");

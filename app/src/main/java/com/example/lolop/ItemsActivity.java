@@ -66,6 +66,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private static final int RECORD_AUDIO_REQUEST_CODE = 101;
     private boolean isListening = false;
 
+    /**
+     * Initialise la carte de traduction des tags d'objets.
+     * Associe les clés API aux noms de catégories lisibles par l'utilisateur.
+     */
     private void setupTagTranslations() {
         TAG_TRANSLATIONS.put("Boots", getString(R.string.cat_boots));
         TAG_TRANSLATIONS.put("ManaRegen", getString(R.string.cat_mana_regen));
@@ -156,6 +160,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private final Map<String, String> preferredCategoryImages = new HashMap<>();
     private final Map<String, Integer> categoryDrawableImages = new HashMap<>();
 
+    /**
+     * Configure les images préférées pour les catégories.
+     * Associe des drawables spécifiques à chaque catégorie pour l'affichage.
+     */
     private void setupPreferredImages() {
 
         // Drawable resources for categories
@@ -194,6 +202,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
     private final Map<String, String> categoryDescriptions = new HashMap<>();
 
+    /**
+     * Initialise les descriptions textuelles pour chaque catégorie d'objets.
+     * Ces descriptions sont affichées dans l'overlay d'information.
+     */
     private void setupCategoryDescriptions() {
         categoryDescriptions.put(getString(R.string.cat_ad),
                 "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
@@ -209,6 +221,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
     private final List<String> CATEGORY_ORDER = new ArrayList<>();
 
+    /**
+     * Définit l'ordre spécifique d'affichage des catégories dans la liste.
+     * Permet de prioriser certaines catégories (ex: Bottes, Support) en haut de liste.
+     */
     private void setupCategoryOrder() {
         CATEGORY_ORDER.clear();
         CATEGORY_ORDER.addAll(Arrays.asList(
@@ -244,6 +260,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 getString(R.string.cat_trinket)));
     }
 
+    /**
+     * Initialise l'activité, configure les traductions, l'ordre des catégories, la recherche, et l'overlay.
+     * Lance également la récupération de la version et des données.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -273,6 +293,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
+    /**
+     * Attache le contexte de base pour la gestion de la localisation.
+     * Nécessaire pour supporter le changement de langue dynamique.
+     */
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(LocaleHelper.onAttach(newBase));
@@ -287,6 +311,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private TextView tvOverlayDescription; // New
     private RecyclerView rvOverlayItems;
 
+    /**
+     * Initialise les vues et comportements de l'overlay des détails de catégorie.
+     * Configure le RecyclerView de l'overlay et la gestion de la fermeture.
+     */
     private void setupOverlay() {
         overlayContainer = findViewById(R.id.overlayContainer);
         overlayBackground = findViewById(R.id.overlayBackground);
@@ -321,6 +349,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
+    /**
+     * Affiche l'overlay avec les objets d'une catégorie spécifique.
+     * Gère l'animation d'apparition et désactive le défilement de la liste principale.
+     */
     private void showOverlay(String category) {
         if (overlayContainer == null)
             return;
@@ -362,6 +394,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         // binding.rvCategories.suppressLayout(true);
     }
 
+    /**
+     * Cache l'overlay et réactive le défilement de la liste principale.
+     * Gère l'animation de disparition.
+     */
     private void hideOverlay() {
         if (overlayContainer == null)
             return;
@@ -379,10 +415,17 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Indique si l'overlay est actuellement visible.
+     */
     private boolean isOverlayVisible() {
         return overlayContainer != null && overlayContainer.getVisibility() == View.VISIBLE;
     }
 
+    /**
+     * Récupère la dernière version disponible du jeu depuis l'API.
+     * Si la version diffère ou si les fichiers locaux manquent, lance le téléchargement des objets.
+     */
     private void fetchLatestVersion() {
         binding.progressBarItems.setVisibility(View.VISIBLE);
         RetrofitClient.getApiService().getVersions().enqueue(new Callback<List<String>>() {
@@ -411,6 +454,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
+    /**
+     * Met à jour la version affichée dans la barre de navigation (NavbarFragment).
+     */
     private void updateNavbarVersion() {
         com.example.lolop.fragments.NavbarFragment navbar = (com.example.lolop.fragments.NavbarFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.bottomNavigation);
@@ -419,6 +465,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Configure la barre de recherche avec un mécanisme de "debounce".
+     * Attend 300ms après la dernière frappe avant de lancer le filtrage pour éviter les lags.
+     */
     private void setupSearch() {
         android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         final Runnable searchRunnable = new Runnable() {
@@ -447,6 +497,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
+    /**
+     * Initialise la reconnaissance vocale pour la recherche.
+     * Configure les écouteurs pour détecter le début/fin de la parole et les résultats.
+     */
     private void setupVoiceSearch() {
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -507,6 +561,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         binding.ivMicItems.setOnClickListener(v -> checkPermissionAndStartVoiceInput());
     }
 
+    /**
+     * Vérifie la permission microphone et lance ou arrête l'écoute vocale.
+     * Demande la permission à l'utilisateur si elle n'est pas accordée.
+     */
     private void checkPermissionAndStartVoiceInput() {
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -523,6 +581,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Gère la réponse de l'utilisateur à la demande de permission microphone.
+     * Si accordée, lance l'écoute vocale.
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
             @NonNull int[] grantResults) {
@@ -536,6 +598,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Traite le résultat de la recherche vocale.
+     * Remplit la barre de recherche et tente de trouver une correspondance exacte pour ouvrir directement l'objet.
+     */
     private void processVoiceResult(String query) {
         binding.etSearchItems.setText(query);
         String normalizedQuery = stripAccents(query.toLowerCase());
@@ -568,6 +634,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Libère les ressources, notamment le SpeechRecognizer, à la destruction de l'activité.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -576,6 +645,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Filtre les données affichées en fonction de la requête de recherche.
+     * Effectue le filtrage sur un thread séparé pour ne pas bloquer l'UI.
+     * Filtre par nom (FR et EN) et par catégorie.
+     */
     private void filterData(String query) {
         if (categoryAdapter == null)
             return;
@@ -687,6 +761,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }).start();
     }
 
+    /**
+     * Supprime les accents d'une chaîne de caractères pour faciliter la recherche insensible aux accents.
+     */
     private String stripAccents(String s) {
         if (s == null)
             return null;
@@ -695,6 +772,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         return s;
     }
 
+    /**
+     * Télécharge la liste des objets depuis l'API pour la version et la langue actuelles.
+     * Lance ensuite le téléchargement de la langue secondaire.
+     */
     private void fetchItems() {
         binding.progressBarItems.setVisibility(View.VISIBLE);
         String apiLang = LocaleHelper.getApiLanguage(this);
@@ -719,6 +800,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
+    /**
+     * Télécharge les objets dans une langue secondaire (EN/FR).
+     * Permet de construire une map de noms alternatifs pour la recherche.
+     */
     private void fetchSecondaryItems(String lang) {
         RetrofitClient.getApiService().getItems(currentVersion, lang).enqueue(new Callback<ItemResponse>() {
             @Override
@@ -746,6 +831,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
+    /**
+     * Traite les données brutes des objets.
+     * Trie, filtre (doublons, maps non supportées, objets spéciaux) et organise les objets par catégorie.
+     * Exécute le traitement en arrière-plan puis met à jour l'UI.
+     */
     private void processItems(Map<String, Item> data) {
         if (data == null)
             return;
@@ -1031,6 +1121,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }).start();
     }
 
+    /**
+     * Utilitaire pour ajouter un objet à une liste dans une map.
+     * Crée la liste si la clé n'existe pas encore.
+     */
     private void addToMap(HashMap<String, List<Item>> map, String key, Item item) {
         if (!map.containsKey(key)) {
             map.put(key, new ArrayList<>());
@@ -1042,6 +1136,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Formate le nom d'un tag pour l'affichage.
+     * Utilise une traduction si disponible, sinon espace le CamelCase.
+     */
     private String formatTag(String tag) {
         if (TAG_TRANSLATIONS.containsKey(tag)) {
             return TAG_TRANSLATIONS.get(tag);
@@ -1056,6 +1154,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 " ");
     }
 
+    /**
+     * Formate la description HTML brute d'un objet.
+     * Remplace les balises Riot spécifiques par des couleurs et des icônes.
+     */
     private String formatDescription(String description) {
         if (description == null)
             return "";
@@ -1183,6 +1285,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
      * 2. Captures preceding number/unit (Group 2).
      * 3. Reconstructs as [Icon] [Number] [Stat].
      */
+    /**
+     * Remplace une statistique textuelle par son icône correspondante dans une ligne de texte.
+     * Gère le placement intelligent de l'icône avant ou après la valeur.
+     */
     private String replaceStat(String text, String statRegex, String iconName) {
         // Regex Breakdown (Simplified for single line):
         // G1 (Existing Pre-Icon): (?:(<img[^>]+>)(?:\\s*<[^>]+>)*\\s*)?
@@ -1256,11 +1362,19 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
     }
 
+    /**
+     * Gère le clic sur un objet dans l'adaptateur.
+     * Affiche les détails de l'objet cliqué.
+     */
     @Override
     public void onItemClick(Item item) {
         showItemDetail(item);
     }
 
+    /**
+     * Affiche une boîte de dialogue avec les détails complets d'un objet.
+     * Affiche l'icône, le nom, le coût, les tags et la description formatée.
+     */
     private void showItemDetail(Item item) {
         if (isFinishing())
             return;
@@ -1382,6 +1496,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         dialog.show();
     }
 
+    /**
+     * Charge les objets depuis le stockage local (fichier JSON) si disponibles.
+     * Permet un démarrage plus rapide et hors-ligne.
+     */
     private void loadLocalItems() {
         new Thread(() -> {
             String json = FileUtils.readStringFromFile(this, "items.json");
