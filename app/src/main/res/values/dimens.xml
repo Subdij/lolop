@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="fading_edge_length">100dp</dimen>
-    <dimen name="champion_list_bottom_padding">100dp</dimen>
+    <dimen name="champion_list_bottom_padding">80dp</dimen>
 </resources>

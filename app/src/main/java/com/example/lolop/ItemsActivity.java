@@ -13,7 +13,10 @@ import com.example.lolop.api.RetrofitClient;
 import com.example.lolop.databinding.ActivityItemsBinding;
 import com.example.lolop.model.Item;
 import com.example.lolop.model.ItemResponse;
+import com.example.lolop.utils.FileUtils;
 import com.example.lolop.utils.LocaleHelper;
+import com.example.lolop.utils.PreferenceHelper;
+import com.google.gson.Gson;
 import android.content.Context;
 import androidx.recyclerview.widget.GridLayoutManager;
 import android.widget.FrameLayout;
@@ -33,16 +36,24 @@ import java.util.Set;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import android.content.pm.PackageManager;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.widget.Toast;
 
-public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.OnItemClickListener, com.example.lolop.adapter.GridItemAdapter.OnItemClickListener {
+public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.OnItemClickListener,
+        com.example.lolop.adapter.GridItemAdapter.OnItemClickListener {
 
     private ActivityItemsBinding binding;
     private CategoryAdapter categoryAdapter;
     private final Map<String, String> englishItemNames = new HashMap<>();
     private final Map<String, String> TAG_TRANSLATIONS = new HashMap<>();
-    private final Map<String, Item> representativeItems = new HashMap<>(); // Store stable representative item for each category
+    private final Map<String, Item> representativeItems = new HashMap<>(); // Store stable representative item for each
+                                                                           // category
 
-    
     private String currentVersion = "14.5.1"; // Default fallback
     private List<String> listDataHeader = new ArrayList<>();
     private final HashMap<String, List<Item>> listDataChild = new HashMap<>();
@@ -50,6 +61,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private HashMap<String, List<Item>> originalDataChild = new HashMap<>();
     private static final String TAG = "ItemsActivity";
 
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechRecognizerIntent;
+    private static final int RECORD_AUDIO_REQUEST_CODE = 101;
+    private boolean isListening = false;
 
     private void setupTagTranslations() {
         TAG_TRANSLATIONS.put("Boots", getString(R.string.cat_boots));
@@ -73,8 +88,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         TAG_TRANSLATIONS.put("Movement", getString(R.string.cat_move_speed));
         TAG_TRANSLATIONS.put("SpellVamp", getString(R.string.cat_omnivamp));
         TAG_TRANSLATIONS.put("Stealth", getString(R.string.cat_stealth));
-        TAG_TRANSLATIONS.put("NonbootsMovement", getString(R.string.cat_speed_no_boots)); 
-        TAG_TRANSLATIONS.put("Aura", getString(R.string.cat_aura)); 
+        TAG_TRANSLATIONS.put("NonbootsMovement", getString(R.string.cat_speed_no_boots));
+        TAG_TRANSLATIONS.put("Aura", getString(R.string.cat_aura));
         TAG_TRANSLATIONS.put("Slow", getString(R.string.cat_slow));
         TAG_TRANSLATIONS.put("Tenacity", getString(R.string.cat_tenacity));
         TAG_TRANSLATIONS.put("MagicResist", getString(R.string.cat_mr));
@@ -139,76 +154,94 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private final Map<String, String> preferredCategoryImages = new HashMap<>();
+    private final Map<String, Integer> categoryDrawableImages = new HashMap<>();
+
     private void setupPreferredImages() {
-        preferredCategoryImages.put(getString(R.string.cat_ad), "1036");           // Long Sword
-        preferredCategoryImages.put(getString(R.string.cat_ap), "3089");           // Rabadon's Deathcap
-        preferredCategoryImages.put(getString(R.string.cat_health), "1028");       // Ruby Crystal
-        preferredCategoryImages.put(getString(R.string.cat_armor_pen), "3035");    // Last Whisper
-        preferredCategoryImages.put(getString(R.string.cat_magic_pen), "4630");    // Blighting Jewel
-        preferredCategoryImages.put(getString(R.string.cat_life_steal), "3072");   // Bloodthirster
-        preferredCategoryImages.put(getString(R.string.cat_health_regen), "3083"); // Warmog's Armor
-        preferredCategoryImages.put(getString(R.string.cat_speed_no_boots), "3066"); // Winged Moonplate
-        preferredCategoryImages.put(getString(R.string.cat_tenacity), "3053");     // Sterak's Gage
-        preferredCategoryImages.put(getString(R.string.cat_active), "3157");       // Zhonya's Hourglass
-        preferredCategoryImages.put(getString(R.string.cat_aura), "3068");         // Sunfire Aegis
-        preferredCategoryImages.put(getString(R.string.cat_on_hit), "6672");       // Kraken Slayer
-        preferredCategoryImages.put(getString(R.string.cat_jungle), "1103");       // Mosstomper Seedling
-        preferredCategoryImages.put(getString(R.string.cat_omnivamp), "4633");     // Riftmaker
-        preferredCategoryImages.put(getString(R.string.cat_anti_heal), "3165");    // Morellonomicon
-        preferredCategoryImages.put(getString(R.string.cat_anti_shield), "6695");  // Serpent's Fang
-        preferredCategoryImages.put(getString(R.string.cat_lethality), "3134");    // Serrated Dirk
-        preferredCategoryImages.put(getString(R.string.cat_spellblade), "3057");   // Sheen
-        preferredCategoryImages.put(getString(R.string.cat_lifeline), "6673");     // Immortal Shieldbow
-        preferredCategoryImages.put(getString(R.string.cat_shield), "3190");       // Locket of the Iron Solari
-        preferredCategoryImages.put(getString(R.string.cat_support), "3869");      // Support Item
+
+        // Drawable resources for categories
+        categoryDrawableImages.put(getString(R.string.cat_ad), R.drawable.ic_stat_ad);
+        categoryDrawableImages.put(getString(R.string.cat_ap), R.drawable.ic_stat_ap);
+        categoryDrawableImages.put(getString(R.string.cat_health), R.drawable.ic_stat_health);
+        categoryDrawableImages.put(getString(R.string.cat_armor_pen), R.drawable.ic_stat_armor_pen);
+        categoryDrawableImages.put(getString(R.string.cat_magic_pen), R.drawable.ic_stat_magic_pen);
+        categoryDrawableImages.put(getString(R.string.cat_life_steal), R.drawable.ic_stat_lifesteal);
+        categoryDrawableImages.put(getString(R.string.cat_health_regen), R.drawable.ic_stat_hp_regen);
+        categoryDrawableImages.put(getString(R.string.cat_speed_no_boots), R.drawable.ic_stat_move_speed);
+        categoryDrawableImages.put(getString(R.string.cat_tenacity), R.drawable.ic_stat_tenacity);
+        categoryDrawableImages.put(getString(R.string.cat_active), R.drawable.ic_stat_active);
+        categoryDrawableImages.put(getString(R.string.cat_aura), R.drawable.ic_stat_aura);
+        categoryDrawableImages.put(getString(R.string.cat_on_hit), R.drawable.ic_stat_on_hit);
+        categoryDrawableImages.put(getString(R.string.cat_jungle), R.drawable.role_jungle);
+        categoryDrawableImages.put(getString(R.string.cat_omnivamp), R.drawable.ic_stat_vamp);
+        categoryDrawableImages.put(getString(R.string.cat_anti_heal), R.drawable.ic_stat_anti_heal);
+        categoryDrawableImages.put(getString(R.string.cat_anti_shield), R.drawable.ic_stat_anti_shield);
+        categoryDrawableImages.put(getString(R.string.cat_lethality), R.drawable.ic_stat_armor_pen);
+        categoryDrawableImages.put(getString(R.string.cat_spellblade), R.drawable.ic_stat_spellblade);
+        categoryDrawableImages.put(getString(R.string.cat_lifeline), R.drawable.ic_stat_lifeline);
+        categoryDrawableImages.put(getString(R.string.cat_support), R.drawable.role_support);
+        categoryDrawableImages.put(getString(R.string.cat_boots), R.drawable.ic_stat_boots);
+        categoryDrawableImages.put(getString(R.string.cat_mana), R.drawable.ic_stat_mana);
+        categoryDrawableImages.put(getString(R.string.cat_mana_regen), R.drawable.ic_stat_mana_regen);
+        categoryDrawableImages.put(getString(R.string.cat_gold_per), R.drawable.ic_stat_gold);
+        categoryDrawableImages.put(getString(R.string.cat_ability_haste), R.drawable.ic_stat_haste);
+        categoryDrawableImages.put(getString(R.string.cat_armor), R.drawable.ic_stat_armor);
+        categoryDrawableImages.put(getString(R.string.cat_mr), R.drawable.ic_stat_mr);
+        categoryDrawableImages.put(getString(R.string.cat_as), R.drawable.ic_stat_attack_speed);
+        categoryDrawableImages.put(getString(R.string.cat_crit), R.drawable.ic_stat_crit);
+        categoryDrawableImages.put(getString(R.string.cat_vision), R.drawable.ic_stat_vision);
+        categoryDrawableImages.put(getString(R.string.cat_slow), R.drawable.ic_stat_slow);
     }
 
     private final Map<String, String> categoryDescriptions = new HashMap<>();
+
     private void setupCategoryDescriptions() {
-        categoryDescriptions.put(getString(R.string.cat_ad), "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
+        categoryDescriptions.put(getString(R.string.cat_ad),
+                "Augmente la puissance de vos attaques de base et de vos compétences physiques.");
         categoryDescriptions.put(getString(R.string.cat_ap), "Augmente les dégâts de vos compétences magiques.");
-        categoryDescriptions.put(getString(R.string.cat_support), "Objets de départ pour les supports qui évoluent au fil de la partie.");
-        categoryDescriptions.put(getString(R.string.cat_health), "Augmente votre santé maximale pour subir plus de dégâts.");
+        categoryDescriptions.put(getString(R.string.cat_support),
+                "Objets de départ pour les supports qui évoluent au fil de la partie.");
+        categoryDescriptions.put(getString(R.string.cat_health),
+                "Augmente votre santé maximale pour subir plus de dégâts.");
         // Descriptions are static in logic but keys must match current language headers
-        // Ideally should externalize descriptions too but keeping it simple for now as requested keys fix
+        // Ideally should externalize descriptions too but keeping it simple for now as
+        // requested keys fix
     }
 
     private final List<String> CATEGORY_ORDER = new ArrayList<>();
-    
+
     private void setupCategoryOrder() {
         CATEGORY_ORDER.clear();
         CATEGORY_ORDER.addAll(Arrays.asList(
-            getString(R.string.cat_boots),
-            getString(R.string.cat_support),
-            getString(R.string.cat_ad),
-            getString(R.string.cat_ap),
-            getString(R.string.cat_lethality),
-            getString(R.string.cat_spellblade),
-            getString(R.string.cat_health),
-            getString(R.string.cat_shield),
-            getString(R.string.cat_lifeline),
-            getString(R.string.cat_armor_pen),
-            getString(R.string.cat_magic_pen),
-            getString(R.string.cat_life_steal),
-            getString(R.string.cat_omnivamp),
-            getString(R.string.cat_anti_heal),
-            getString(R.string.cat_anti_shield),
-            getString(R.string.cat_mana),
-            getString(R.string.cat_mana_regen),
-            getString(R.string.cat_health_regen),
-            getString(R.string.cat_move_speed),
-            getString(R.string.cat_speed_no_boots),
-            getString(R.string.cat_tenacity),
-            getString(R.string.cat_active),
-            getString(R.string.cat_aura),
-            getString(R.string.cat_slow),
-            getString(R.string.cat_on_hit),
-            getString(R.string.cat_gold_per),
-            getString(R.string.cat_vision),
-            getString(R.string.cat_jungle),
-            getString(R.string.cat_lane),
-            getString(R.string.cat_trinket)
-        ));
+                getString(R.string.cat_boots),
+                getString(R.string.cat_support),
+                getString(R.string.cat_ad),
+                getString(R.string.cat_ap),
+                getString(R.string.cat_lethality),
+                getString(R.string.cat_spellblade),
+                getString(R.string.cat_health),
+                getString(R.string.cat_shield),
+                getString(R.string.cat_lifeline),
+                getString(R.string.cat_armor_pen),
+                getString(R.string.cat_magic_pen),
+                getString(R.string.cat_life_steal),
+                getString(R.string.cat_omnivamp),
+                getString(R.string.cat_anti_heal),
+                getString(R.string.cat_anti_shield),
+                getString(R.string.cat_mana),
+                getString(R.string.cat_mana_regen),
+                getString(R.string.cat_health_regen),
+                getString(R.string.cat_move_speed),
+                getString(R.string.cat_speed_no_boots),
+                getString(R.string.cat_tenacity),
+                getString(R.string.cat_active),
+                getString(R.string.cat_aura),
+                getString(R.string.cat_slow),
+                getString(R.string.cat_on_hit),
+                getString(R.string.cat_gold_per),
+                getString(R.string.cat_vision),
+                getString(R.string.cat_jungle),
+                getString(R.string.cat_lane),
+                getString(R.string.cat_trinket)));
     }
 
     @Override
@@ -217,13 +250,13 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         binding = ActivityItemsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-
-        setupNavigation();
+        updateNavbarVersion();
         setupTagTranslations();
         setupCategoryOrder();
         setupPreferredImages();
         setupCategoryDescriptions();
         setupSearch();
+        setupVoiceSearch();
         setupOverlay();
         fetchLatestVersion();
 
@@ -264,18 +297,20 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         rvOverlayItems = findViewById(R.id.rvOverlayItems);
 
         rvOverlayItems.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columns for items as requested
-        
-        // Disable nested scrolling for the overlay list so it doesn't propagate scroll events to the CoordinatorLayout/AppBar
+
+        // Disable nested scrolling for the overlay list so it doesn't propagate scroll
+        // events to the CoordinatorLayout/AppBar
         rvOverlayItems.setNestedScrollingEnabled(false);
 
-        // Consume all touch events on the background to prevent them from passing through to the list behind
+        // Consume all touch events on the background to prevent them from passing
+        // through to the list behind
         overlayBackground.setOnTouchListener((v, event) -> {
             hideOverlay();
             return true; // Consume the event
         });
-        
+
         btnCloseOverlay.setOnClickListener(v -> hideOverlay());
-        
+
         // Toggle description
         btnInfoOverlay.setOnClickListener(v -> {
             if (tvOverlayDescription.getVisibility() == View.VISIBLE) {
@@ -287,10 +322,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private void showOverlay(String category) {
-        if (overlayContainer == null) return;
-        
+        if (overlayContainer == null)
+            return;
+
         tvOverlayTitle.setText(category);
-        
+
         // Set info text
         String desc = categoryDescriptions.get(category);
         if (desc != null) {
@@ -301,13 +337,13 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
         // Always start hidden
         tvOverlayDescription.setVisibility(View.GONE);
-        
+
         List<Item> items = listDataChild.get(category);
         if (items != null) {
             OverlayItemAdapter adapter = new OverlayItemAdapter(this, items, currentVersion);
             rvOverlayItems.setAdapter(adapter);
         } else {
-             rvOverlayItems.setAdapter(null);
+            rvOverlayItems.setAdapter(null);
         }
 
         if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
@@ -318,16 +354,18 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             overlayContainer.setAlpha(0f);
             overlayContainer.animate().alpha(1f).setDuration(200).start();
         }
-        
+
         // Disable scrolling on the main list
         binding.rvCategories.setNestedScrollingEnabled(false);
-        // Also suppress layout to be extremely safe, although nestedScrollingEnabled usually suffices for Grid
+        // Also suppress layout to be extremely safe, although nestedScrollingEnabled
+        // usually suffices for Grid
         // binding.rvCategories.suppressLayout(true);
     }
 
     private void hideOverlay() {
-        if (overlayContainer == null) return;
-        
+        if (overlayContainer == null)
+            return;
+
         // Re-enable scrolling on the main list
         binding.rvCategories.setNestedScrollingEnabled(true);
         // binding.rvCategories.suppressLayout(false);
@@ -336,12 +374,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             overlayContainer.setVisibility(View.GONE);
             binding.rvCategories.setNestedScrollingEnabled(true);
         } else {
-            overlayContainer.animate().alpha(0f).setDuration(200).withEndAction(() -> 
-                overlayContainer.setVisibility(View.GONE)
-            ).start();
+            overlayContainer.animate().alpha(0f).setDuration(200)
+                    .withEndAction(() -> overlayContainer.setVisibility(View.GONE)).start();
         }
     }
-    
+
     private boolean isOverlayVisible() {
         return overlayContainer != null && overlayContainer.getVisibility() == View.VISIBLE;
     }
@@ -353,8 +390,18 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             public void onResponse(@NonNull Call<List<String>> call, @NonNull Response<List<String>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     currentVersion = response.body().get(0);
+                    updateNavbarVersion();
+
+                    PreferenceHelper prefs = new PreferenceHelper(ItemsActivity.this);
+                    String savedVersion = prefs.getLastKnownVersion();
+                    if (currentVersion.equals(savedVersion) && FileUtils.fileExists(ItemsActivity.this, "items.json")) {
+                        loadLocalItems();
+                    } else {
+                        fetchItems();
+                    }
+                } else {
+                    fetchItems();
                 }
-                fetchItems();
             }
 
             @Override
@@ -364,24 +411,12 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         });
     }
 
-    private void setupNavigation() {
-        binding.bottomNavigation.setSelectedItemId(R.id.nav_items);
-        binding.bottomNavigation.setOnItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_champions) {
-                startActivity(new Intent(ItemsActivity.this, MainActivity.class));
-                overridePendingTransition(0, 0); // No animation
-                return true;
-            } else if (item.getItemId() == R.id.nav_items) {
-                return true;
-            } else if (item.getItemId() == R.id.nav_patch) {
-                Intent intent = new Intent(ItemsActivity.this, PatchNoteActivity.class);
-                intent.putExtra("CURRENT_VERSION", currentVersion);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-                return true;
-            }
-            return false;
-        });
+    private void updateNavbarVersion() {
+        com.example.lolop.fragments.NavbarFragment navbar = (com.example.lolop.fragments.NavbarFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.bottomNavigation);
+        if (navbar != null) {
+            navbar.setCurrentVersion(currentVersion);
+        }
     }
 
     private void setupSearch() {
@@ -395,7 +430,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         };
 
         binding.etSearchItems.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -404,12 +441,144 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 searchHandler.postDelayed(searchRunnable, 300);
             }
 
-            @Override public void afterTextChanged(Editable s) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
         });
     }
 
+    private void setupVoiceSearch() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault());
+
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                binding.ivMicItems.setImageResource(R.drawable.ic_mic_active);
+                isListening = true;
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {
+            }
+
+            @Override
+            public void onRmsChanged(float rmsdB) {
+            }
+
+            @Override
+            public void onBufferReceived(byte[] buffer) {
+            }
+
+            @Override
+            public void onEndOfSpeech() {
+                binding.ivMicItems.setImageResource(R.drawable.ic_mic_inactive);
+                isListening = false;
+            }
+
+            @Override
+            public void onError(int error) {
+                binding.ivMicItems.setImageResource(R.drawable.ic_mic_inactive);
+                isListening = false;
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                binding.ivMicItems.setImageResource(R.drawable.ic_mic_inactive);
+                isListening = false;
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (matches != null && !matches.isEmpty()) {
+                    processVoiceResult(matches.get(0));
+                }
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+            }
+
+            @Override
+            public void onEvent(int eventType, Bundle params) {
+            }
+        });
+
+        binding.ivMicItems.setOnClickListener(v -> checkPermissionAndStartVoiceInput());
+    }
+
+    private void checkPermissionAndStartVoiceInput() {
+        if (ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] { android.Manifest.permission.RECORD_AUDIO },
+                    RECORD_AUDIO_REQUEST_CODE);
+        } else {
+            if (isListening) {
+                speechRecognizer.stopListening();
+                binding.ivMicItems.setImageResource(R.drawable.ic_mic_inactive);
+                isListening = false;
+            } else {
+                speechRecognizer.startListening(speechRecognizerIntent);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == RECORD_AUDIO_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                speechRecognizer.startListening(speechRecognizerIntent);
+            } else {
+                Toast.makeText(this, "Permission denied to record audio", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void processVoiceResult(String query) {
+        binding.etSearchItems.setText(query);
+        String normalizedQuery = stripAccents(query.toLowerCase());
+
+        // Iterate through ALL items to find exact match
+        for (List<Item> itemList : originalDataChild.values()) {
+            if (itemList != null) {
+                for (Item item : itemList) {
+                    // Check French Name
+                    if (item.getName() != null) {
+                        String normalizedName = stripAccents(item.getName().toLowerCase());
+                        if (normalizedName.equalsIgnoreCase(normalizedQuery)) {
+                            showItemDetail(item);
+                            return;
+                        }
+                    }
+                    // Check English Name
+                    if (item.getId() != null) {
+                        String enName = englishItemNames.get(item.getId());
+                        if (enName != null) {
+                            String normalizedEnName = stripAccents(enName.toLowerCase());
+                            if (normalizedEnName.equalsIgnoreCase(normalizedQuery)) {
+                                showItemDetail(item);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
+    }
+
     private void filterData(String query) {
-        if (categoryAdapter == null) return;
+        if (categoryAdapter == null)
+            return;
 
         new Thread(() -> {
             if (query.isEmpty()) {
@@ -425,13 +594,13 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             String normalizedQuery = stripAccents(query.toLowerCase());
             List<String> filteredHeaders = new ArrayList<>();
             HashMap<String, List<Item>> filteredChild = new HashMap<>();
-            
+
             Map<String, Item> allMatchesMap = new HashMap<>();
 
             for (String header : originalDataHeader) {
                 List<Item> originalItems = originalDataChild.get(header);
                 List<Item> filteredItems = new ArrayList<>();
-                
+
                 boolean headerMatches = stripAccents(header.toLowerCase()).contains(normalizedQuery);
 
                 if (!headerMatches) {
@@ -454,7 +623,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     // Iterate through items individually to check for matches
                     for (Item item : originalItems) {
                         boolean match = false;
-                        
+
                         // Check French Name
                         if (item.getName() != null) {
                             String normalizedItemName = stripAccents(item.getName().toLowerCase());
@@ -462,16 +631,16 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                                 match = true;
                             }
                         }
-                        
+
                         // Check English Name
                         if (!match && item.getId() != null) {
-                             String enName = englishItemNames.get(item.getId());
-                             if (enName != null) {
-                                 String normalizedEnName = stripAccents(enName.toLowerCase());
-                                 if (normalizedEnName.contains(normalizedQuery)) {
-                                     match = true;
-                                 }
-                             }
+                            String enName = englishItemNames.get(item.getId());
+                            if (enName != null) {
+                                String normalizedEnName = stripAccents(enName.toLowerCase());
+                                if (normalizedEnName.contains(normalizedQuery)) {
+                                    match = true;
+                                }
+                            }
                         }
 
                         if (match) {
@@ -483,7 +652,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 if (!filteredItems.isEmpty()) {
                     filteredHeaders.add(header);
                     filteredChild.put(header, filteredItems);
-                    
+
                     for (Item item : filteredItems) {
                         if (item.getId() != null) {
                             allMatchesMap.put(item.getId(), item);
@@ -491,18 +660,20 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     }
                 }
             }
-            
+
             if (!allMatchesMap.isEmpty()) {
                 String toutHeader = getString(R.string.category_all);
                 List<Item> allItems = new ArrayList<>(allMatchesMap.values());
                 Collections.sort(allItems, (i1, i2) -> {
                     String n1 = i1.getName();
                     String n2 = i2.getName();
-                    if (n1 == null) return -1;
-                    if (n2 == null) return 1;
+                    if (n1 == null)
+                        return -1;
+                    if (n2 == null)
+                        return 1;
                     return n1.compareToIgnoreCase(n2);
                 });
-                
+
                 filteredHeaders.add(0, toutHeader);
                 filteredChild.put(toutHeader, allItems);
             }
@@ -517,7 +688,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private String stripAccents(String s) {
-        if (s == null) return null;
+        if (s == null)
+            return null;
         s = Normalizer.normalize(s, Normalizer.Form.NFD);
         s = s.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
         return s;
@@ -531,10 +703,10 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             @Override
             public void onResponse(@NonNull Call<ItemResponse> call, @NonNull Response<ItemResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                     processItems(response.body().getData());
-                     // Fetch secondary language for search (if FR, fetch EN. If EN, fetch FR)
-                     String secondaryLang = apiLang.equals("fr_FR") ? "en_US" : "fr_FR";
-                     fetchSecondaryItems(secondaryLang); 
+                    processItems(response.body().getData());
+                    // Fetch secondary language for search (if FR, fetch EN. If EN, fetch FR)
+                    String secondaryLang = apiLang.equals("fr_FR") ? "en_US" : "fr_FR";
+                    fetchSecondaryItems(secondaryLang);
                 } else {
                     binding.progressBarItems.setVisibility(View.GONE);
                 }
@@ -546,15 +718,16 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             }
         });
     }
-    
+
     private void fetchSecondaryItems(String lang) {
         RetrofitClient.getApiService().getItems(currentVersion, lang).enqueue(new Callback<ItemResponse>() {
             @Override
             public void onResponse(@NonNull Call<ItemResponse> call, @NonNull Response<ItemResponse> response) {
                 // Secondary items fetch finished, hide loader here if strictly needed,
-                // but processItems usually handles main UI. Keeping consistent with previous logic.
+                // but processItems usually handles main UI. Keeping consistent with previous
+                // logic.
                 binding.progressBarItems.setVisibility(View.GONE);
-                
+
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     new Thread(() -> {
                         for (Map.Entry<String, Item> entry : response.body().getData().entrySet()) {
@@ -574,7 +747,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private void processItems(Map<String, Item> data) {
-        if (data == null) return;
+        if (data == null)
+            return;
 
         new Thread(() -> {
             // Temporary map to group items by tag
@@ -590,8 +764,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 item.setId(entry.getKey());
                 sortedItems.add(item);
             }
-            
-            // Sort by ID (numerical) to prioritize lower IDs (standard items) over higher IDs (special modes)
+
+            // Sort by ID (numerical) to prioritize lower IDs (standard items) over higher
+            // IDs (special modes)
             Collections.sort(sortedItems, (i1, i2) -> {
                 try {
                     int id1 = Integer.parseInt(i1.getId());
@@ -603,31 +778,31 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             });
 
             Set<String> seenNames = new HashSet<>();
-            
-            // IDs des items que l'on exclut
+
+            // Blacklisted IDs to remove
             Set<String> blacklistedIds = new HashSet<>(Arrays.asList(
-                "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138", "2139", "2140", "2055","2051","223184","3112","3177", "3184", "2141",
-                "3170", "3171", "3172", "3173", "3174", "3175"
-            ));
-            // IDs des items autorisés même s'ils ont un attribut "into" -- Bottes
+                    "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138",
+                    "2139", "2140", "2055", "2051", "223184", "3112", "3177", "3184", "2141",
+                    "3170", "3171", "3172", "3173", "3174", "3175"));
+
             Set<String> allowedWithInto = new HashSet<>(Arrays.asList(
-                "3111", "3020", "3158", "3006", "3047", "3009",
-                "3876", "3877", "3869", "3870", "3871"
-            ));
-            // IDs des items support pour les enlever des autres catégories et les mettre dans une seule catégorie
+                    "3111", "3020", "3158", "3006", "3047", "3009",
+                    "3876", "3877", "3869", "3870", "3871"));
             Set<String> supportItems = new HashSet<>(Arrays.asList(
-                "3876", "3877", "3869", "3870", "3871"
-            ));
+                    "3876", "3877", "3869", "3870", "3871"));
 
             for (Item item : sortedItems) {
                 // Filter out items without name or generic/internal items
-                if (item.getName() == null || item.getName().isEmpty()) continue;
+                if (item.getName() == null || item.getName().isEmpty())
+                    continue;
 
-                // Deduplicate by Name (Case insensitive logic if needed, but strict name usually works)
-                if (seenNames.contains(item.getName())) continue;
+                // Deduplicate by Name (Case insensitive logic if needed, but strict name
+                // usually works)
+                if (seenNames.contains(item.getName()))
+                    continue;
                 seenNames.add(item.getName());
-                
-                // Enlève les items à exclure
+
+                // Exclude blacklisted IDs
                 if (item.getId() != null && blacklistedIds.contains(item.getId())) {
                     continue;
                 }
@@ -640,12 +815,15 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 // Exclude non-purchasable items or hidden items
                 boolean isSupportItem = item.getId() != null && supportItems.contains(item.getId());
                 if (!isSupportItem) {
-                    if (!item.isInStore()) continue;
-                    if (item.getGold() != null && !item.getGold().isPurchasable()) continue;
+                    if (!item.isInStore())
+                        continue;
+                    if (item.getGold() != null && !item.getGold().isPurchasable())
+                        continue;
                 }
 
                 // Ensure we don't show required champion items unless necessary
-                if (item.getRequiredChampion() != null) continue;
+                if (item.getRequiredChampion() != null)
+                    continue;
 
                 // Filter out Ornn upgrades (they contain <ornnBonus> in description)
                 if (item.getDescription() != null && item.getDescription().contains("<ornnBonus>")) {
@@ -670,12 +848,13 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 // Logique Items Support 
                 if (item.getId() != null && supportItems.contains(item.getId())) {
                     addToMap(tempMap, getString(R.string.cat_support), item);
-                    continue; 
+                    continue;
                 }
 
                 // Map items to tags
                 List<String> tags = item.getTags();
-                if (tags == null || tags.isEmpty()) continue;
+                if (tags == null || tags.isEmpty())
+                    continue;
 
                 Set<String> uniqueCategories = new HashSet<>();
                 for (String tag : tags) {
@@ -684,16 +863,17 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 for (String category : uniqueCategories) {
                     addToMap(tempMap, category, item);
                 }
-                
+
                 // Custom Logic: Anti-heal (Hémorragie)
                 // Check description for keywords
                 if (item.getDescription() != null) {
                     String lowerDesc = item.getDescription().toLowerCase();
                     // Keep Anti-heal logic
-                    if (lowerDesc.contains("hémorragie") || lowerDesc.contains("grievous wounds") || lowerDesc.contains("réduit les soins")) {
+                    if (lowerDesc.contains("hémorragie") || lowerDesc.contains("grievous wounds")
+                            || lowerDesc.contains("réduit les soins")) {
                         addToMap(tempMap, getString(R.string.cat_anti_heal), item);
                     }
-                    
+
                     // Consolided Anti-shield Logic to prevent duplicates
                     boolean isAntiShield = false;
                     if (lowerDesc.contains("réduit les boucliers") || lowerDesc.contains("shield reave")) {
@@ -701,9 +881,9 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     } else if (item.getName() != null && item.getName().equalsIgnoreCase("Crochet de serpent")) {
                         isAntiShield = true;
                     }
-                    
+
                     if (isAntiShield) {
-                         addToMap(tempMap, getString(R.string.cat_anti_shield), item);
+                        addToMap(tempMap, getString(R.string.cat_anti_shield), item);
                     }
 
                     // Létalité
@@ -713,7 +893,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
                     // Lame enchantée (Spellblade)
                     if (lowerDesc.contains("lame enchantée") || lowerDesc.contains("spellblade")) {
-                         addToMap(tempMap, getString(R.string.cat_spellblade), item);
+                        addToMap(tempMap, getString(R.string.cat_spellblade), item);
                     }
 
                     // Lien vital (Lifeline)
@@ -722,9 +902,11 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     }
 
                     // Bouclier (Donne un bouclier / Shielding)
-                    // Use keywords like "confère un bouclier" (grants a shield) to avoid anti-shield items
-                    if (lowerDesc.contains("confère un bouclier") || lowerDesc.contains("octroie un bouclier") || lowerDesc.contains("grants a shield")) {
-                         addToMap(tempMap, getString(R.string.cat_shield), item);
+                    // Use keywords like "confère un bouclier" (grants a shield) to avoid
+                    // anti-shield items
+                    if (lowerDesc.contains("confère un bouclier") || lowerDesc.contains("octroie un bouclier")
+                            || lowerDesc.contains("grants a shield")) {
+                        addToMap(tempMap, getString(R.string.cat_shield), item);
                     }
                 }
             }
@@ -737,15 +919,17 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             Collections.sort(localHeader, (o1, o2) -> {
                 int index1 = CATEGORY_ORDER.indexOf(o1);
                 int index2 = CATEGORY_ORDER.indexOf(o2);
-                
+
                 // If both are in the list, compare indices
                 if (index1 != -1 && index2 != -1) {
                     return Integer.compare(index1, index2);
                 }
                 // If only one is in the list, it comes first
-                if (index1 != -1) return -1;
-                if (index2 != -1) return 1;
-                
+                if (index1 != -1)
+                    return -1;
+                if (index2 != -1)
+                    return 1;
+
                 // If neither is in the list, sort alphabetically
                 return o1.compareToIgnoreCase(o2);
             });
@@ -754,66 +938,67 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             // Use local copies to thread safety before posting back
             for (String header : localHeader) {
                 List<Item> items = tempMap.get(header);
-                
+
                 if (items != null) {
                     // Sort by gold, then name
                     Collections.sort(items, (i1, i2) -> {
-                         int price1 = (i1.getGold() != null) ? i1.getGold().getTotal() : 0;
-                         int price2 = (i2.getGold() != null) ? i2.getGold().getTotal() : 0;
-                         if (price1 != price2) return Integer.compare(price1, price2);
-                         
-                         String n1 = i1.getName();
-                         String n2 = i2.getName();
-                         if (n1 == null) return -1;
-                         if (n2 == null) return 1;
-                         return n1.compareToIgnoreCase(n2);
+                        int price1 = (i1.getGold() != null) ? i1.getGold().getTotal() : 0;
+                        int price2 = (i2.getGold() != null) ? i2.getGold().getTotal() : 0;
+                        if (price1 != price2)
+                            return Integer.compare(price1, price2);
+
+                        String n1 = i1.getName();
+                        String n2 = i2.getName();
+                        if (n1 == null)
+                            return -1;
+                        if (n2 == null)
+                            return 1;
+                        return n1.compareToIgnoreCase(n2);
                     });
                 }
-                
+
                 // Capture representative item for this header (First item)
                 if (items != null && !items.isEmpty() && !representativeItems.containsKey(header)) {
                     Item repItem = items.get(0); // Default to first item
-                    
+
                     // Check for preferred custom image
                     if (preferredCategoryImages.containsKey(header)) {
                         String preferredId = preferredCategoryImages.get(header);
-                        
+
                         boolean found = false;
                         for (Item item : items) {
-                             if (item.getId() != null && item.getId().equals(preferredId)) {
-                                 repItem = item;
-                                 found = true;
-                                 break;
-                             }
+                            if (item.getId() != null && item.getId().equals(preferredId)) {
+                                repItem = item;
+                                found = true;
+                                break;
+                            }
                         }
-                        
+
                         if (!found) {
                             // Fallback
-                             for (Item item : sortedItems) { 
-                                 if (item.getId() != null && item.getId().equals(preferredId)) {
-                                     repItem = item;
-                                     break;
-                                 }
-                             }
+                            for (Item item : sortedItems) {
+                                if (item.getId() != null && item.getId().equals(preferredId)) {
+                                    repItem = item;
+                                    break;
+                                }
+                            }
                         }
                     }
-                    
+
                     representativeItems.put(header, repItem);
                 }
             }
 
             // DEBUG: affiche le nombre d'items (uniques) affichés
             android.util.Log.d(TAG,
-                    "Items passing filters (map 11 + no 'into'): " + passedFilterIds.size()
-            );
-
+                    "Items passing filters (map 11 + no 'into'): " + passedFilterIds.size());
 
             // Post result to UI Thread
             runOnUiThread(() -> {
                 // Save results
                 listDataHeader.clear();
                 listDataHeader.addAll(localHeader);
-                
+
                 listDataChild.clear();
                 listDataChild.putAll(tempMap);
 
@@ -822,26 +1007,27 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 originalDataChild = new HashMap<>(listDataChild);
 
                 // Set adapter
-                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion, representativeItems, category -> {
-                     showOverlay(category);
-                });
-                
+                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion,
+                        representativeItems, categoryDrawableImages, category -> {
+                            showOverlay(category);
+                        });
                 GridLayoutManager layoutManager = new GridLayoutManager(ItemsActivity.this, 2);
                 layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                     @Override
                     public int getSpanSize(int position) {
                         // "Tout" takes 2 spans (full width), others take 1
-                        if (getString(R.string.category_all).equals(categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
+                        if (getString(R.string.category_all).equals(
+                                categoryAdapter.getItemCount() > position ? listDataHeader.get(position) : "")) {
                             return 2;
                         }
                         return 1;
                     }
                 });
-                
+
                 binding.rvCategories.setLayoutManager(layoutManager);
                 binding.rvCategories.setAdapter(categoryAdapter);
             });
-            
+
         }).start();
     }
 
@@ -860,105 +1046,105 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         if (TAG_TRANSLATIONS.containsKey(tag)) {
             return TAG_TRANSLATIONS.get(tag);
         }
-        
+
         // Fallback or English: Split CamelCase
         return tag.replaceAll(
-            String.format("%s|%s|%s",
-                "(?<=[A-Z])(?=[A-Z][a-z])",
-                "(?<=[^A-Z])(?=[A-Z])",
-                "(?<=[A-Za-z])(?=[^A-Za-z])"
-            ),
-            " "
-        );
+                String.format("%s|%s|%s",
+                        "(?<=[A-Z])(?=[A-Z][a-z])",
+                        "(?<=[^A-Z])(?=[A-Z])",
+                        "(?<=[A-Za-z])(?=[^A-Za-z])"),
+                " ");
     }
 
     private String formatDescription(String description) {
-        if (description == null) return "";
-        
+        if (description == null)
+            return "";
+
         // 1. Structural Clean-up & Keywords
         String s = description
-             .replaceAll("<mainText>", "")
-             .replaceAll("</mainText>", "")
-             .replaceAll("<stats>", "<br>")
-             .replaceAll("</stats>", "<br>")
-             .replaceAll("<attention>", "<font color='#FFD700'>")
-             .replaceAll("</attention>", "</font>")
-             .replaceAll("<passive>", "<font color='#FFD700'>")
-             .replaceAll("</passive>", "</font>")
-             .replaceAll("<active>", "<font color='#FFD700'>")
-             .replaceAll("</active>", "</font>")
-             .replaceAll("<status>", "<font color='#FFFFFF'>")
-             .replaceAll("</status>", "</font>")
-             .replaceAll("<keywordStealth>", "<font color='#9370DB'>")
-             .replaceAll("</keywordStealth>", "</font>")
-             .replaceAll("<rarityLegendary>", "<font color='#FFD700'>") 
-             .replaceAll("</rarityLegendary>", "</font>")
-             .replaceAll("<rarityMythic>", "<font color='#FF4500'>")
-             .replaceAll("</rarityMythic>", "</font>");
+                .replaceAll("<mainText>", "")
+                .replaceAll("</mainText>", "")
+                .replaceAll("<stats>", "<br>")
+                .replaceAll("</stats>", "<br>")
+                .replaceAll("<attention>", "<font color='#FFD700'>")
+                .replaceAll("</attention>", "</font>")
+                .replaceAll("<passive>", "<font color='#FFD700'>")
+                .replaceAll("</passive>", "</font>")
+                .replaceAll("<active>", "<font color='#FFD700'>")
+                .replaceAll("</active>", "</font>")
+                .replaceAll("<status>", "<font color='#FFFFFF'>")
+                .replaceAll("</status>", "</font>")
+                .replaceAll("<keywordStealth>", "<font color='#9370DB'>")
+                .replaceAll("</keywordStealth>", "</font>")
+                .replaceAll("<rarityLegendary>", "<font color='#FFD700'>")
+                .replaceAll("</rarityLegendary>", "</font>")
+                .replaceAll("<rarityMythic>", "<font color='#FF4500'>")
+                .replaceAll("</rarityMythic>", "</font>");
 
         // 2. Tag Replacements (Official Riot Tags -> Icons)
         s = s.replaceAll("<attackDamage>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
-            .replaceAll("</attackDamage>", "</font> ") 
-            .replaceAll("<abilityPower>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
-            .replaceAll("</abilityPower>", "</font> ")
-            .replaceAll("<armor>", "<img src='ic_stat_armor'/> <font color='#FFFF00'>")
-            .replaceAll("</armor>", "</font> ")
-            .replaceAll("<spellBlock>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
-            .replaceAll("</spellBlock>", "</font> ")
-            .replaceAll("<magicResistance>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
-            .replaceAll("</magicResistance>", "</font> ")
-            .replaceAll("<attackSpeed>", "<img src='ic_stat_attack_speed'/> <font color='#FFFF00'>")
-            .replaceAll("</attackSpeed>", "</font> ")
-            .replaceAll("<abilityHaste>", "<img src='ic_stat_haste'/> <font color='#FFFFFF'>")
-            .replaceAll("</abilityHaste>", "</font> ")
-            .replaceAll("<moveSpeed>", "<img src='ic_stat_move_speed'/> <font color='#FFFFFF'>")
-            .replaceAll("</moveSpeed>", "</font> ")
-            .replaceAll("<mana>", "<img src='ic_stat_mana'/> <font color='#0099CC'>")
-            .replaceAll("</mana>", "</font> ")
-            .replaceAll("<health>", "<img src='ic_stat_health'/> <font color='#4B8B3B'>")
-            .replaceAll("</health>", "</font> ")
-            .replaceAll("<crit>", "<img src='ic_stat_crit'/> <font color='#FF4500'>")
-            .replaceAll("</crit>", "</font> ")
-            .replaceAll("<lifeSteal>", "<img src='ic_stat_lifesteal'/> <font color='#FF4500'>")
-            .replaceAll("</lifeSteal>", "</font> ")
-            .replaceAll("<physicalDamage>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
-            .replaceAll("</physicalDamage>", "</font>")
-            .replaceAll("<magicDamage>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
-            .replaceAll("</magicDamage>", "</font>")
-            .replaceAll("<trueDamage>", "<font color='#FFFFFF'>") 
-            .replaceAll("</trueDamage>", "</font>")
-            .replaceAll("<healing>", "<img src='ic_stat_health'/> <font color='#00FF00'>")
-            .replaceAll("</healing>", "</font>")
-            .replaceAll("<shield>", "<img src='ic_stat_armor'/> <font color='#FFD700'>")
-            .replaceAll("</shield>", "</font>")
-            .replaceAll("<scaleHealth>", "<img src='ic_stat_health'/> <font color='#4B8B3B'>")
-            .replaceAll("</scaleHealth>", "</font>")
-            .replaceAll("<scaleMana>", "<img src='ic_stat_mana'/> <font color='#0099CC'>")
-            .replaceAll("</scaleMana>", "</font>")
-            .replaceAll("<scaleAD>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
-            .replaceAll("</scaleAD>", "</font>")
-            .replaceAll("<scaleAP>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
-            .replaceAll("</scaleAP>", "</font>")
-            .replaceAll("<scaleArmor>", "<img src='ic_stat_armor'/> <font color='#FFFF00'>")
-            .replaceAll("</scaleArmor>", "</font>")
-            .replaceAll("<scaleMR>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
-            .replaceAll("</scaleMR>", "</font>")
-            .replaceAll("<speed>", "<img src='ic_stat_move_speed'/> <font color='#FFFF00'>")
-            .replaceAll("</speed>", "</font>");
+                .replaceAll("</attackDamage>", "</font> ")
+                .replaceAll("<abilityPower>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
+                .replaceAll("</abilityPower>", "</font> ")
+                .replaceAll("<armor>", "<img src='ic_stat_armor'/> <font color='#FFFF00'>")
+                .replaceAll("</armor>", "</font> ")
+                .replaceAll("<spellBlock>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
+                .replaceAll("</spellBlock>", "</font> ")
+                .replaceAll("<magicResistance>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
+                .replaceAll("</magicResistance>", "</font> ")
+                .replaceAll("<attackSpeed>", "<img src='ic_stat_attack_speed'/> <font color='#FFFF00'>")
+                .replaceAll("</attackSpeed>", "</font> ")
+                .replaceAll("<abilityHaste>", "<img src='ic_stat_haste'/> <font color='#FFFFFF'>")
+                .replaceAll("</abilityHaste>", "</font> ")
+                .replaceAll("<moveSpeed>", "<img src='ic_stat_move_speed'/> <font color='#FFFFFF'>")
+                .replaceAll("</moveSpeed>", "</font> ")
+                .replaceAll("<mana>", "<img src='ic_stat_mana'/> <font color='#0099CC'>")
+                .replaceAll("</mana>", "</font> ")
+                .replaceAll("<health>", "<img src='ic_stat_health'/> <font color='#4B8B3B'>")
+                .replaceAll("</health>", "</font> ")
+                .replaceAll("<crit>", "<img src='ic_stat_crit'/> <font color='#FF4500'>")
+                .replaceAll("</crit>", "</font> ")
+                .replaceAll("<lifeSteal>", "<img src='ic_stat_lifesteal'/> <font color='#FF4500'>")
+                .replaceAll("</lifeSteal>", "</font> ")
+                .replaceAll("<physicalDamage>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
+                .replaceAll("</physicalDamage>", "</font>")
+                .replaceAll("<magicDamage>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
+                .replaceAll("</magicDamage>", "</font>")
+                .replaceAll("<trueDamage>", "<font color='#FFFFFF'>")
+                .replaceAll("</trueDamage>", "</font>")
+                .replaceAll("<healing>", "<img src='ic_stat_health'/> <font color='#00FF00'>")
+                .replaceAll("</healing>", "</font>")
+                .replaceAll("<shield>", "<img src='ic_stat_armor'/> <font color='#FFD700'>")
+                .replaceAll("</shield>", "</font>")
+                .replaceAll("<scaleHealth>", "<img src='ic_stat_health'/> <font color='#4B8B3B'>")
+                .replaceAll("</scaleHealth>", "</font>")
+                .replaceAll("<scaleMana>", "<img src='ic_stat_mana'/> <font color='#0099CC'>")
+                .replaceAll("</scaleMana>", "</font>")
+                .replaceAll("<scaleAD>", "<img src='ic_stat_ad'/> <font color='#FF8C00'>")
+                .replaceAll("</scaleAD>", "</font>")
+                .replaceAll("<scaleAP>", "<img src='ic_stat_ap'/> <font color='#0099CC'>")
+                .replaceAll("</scaleAP>", "</font>")
+                .replaceAll("<scaleArmor>", "<img src='ic_stat_armor'/> <font color='#FFFF00'>")
+                .replaceAll("</scaleArmor>", "</font>")
+                .replaceAll("<scaleMR>", "<img src='ic_stat_mr'/> <font color='#FF00FF'>")
+                .replaceAll("</scaleMR>", "</font>")
+                .replaceAll("<speed>", "<img src='ic_stat_move_speed'/> <font color='#FFFF00'>")
+                .replaceAll("</speed>", "</font>");
 
         // 3. Line-by-Line Processing safely to avoid messing up BR tags
         String[] lines = s.split("<br>");
         StringBuilder sb = new StringBuilder();
-        
+
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
-            
+
             // Complex Stats
             line = replaceStat(line, "régén(\\.|ération)?( de base)? des pv|base health regen", "ic_stat_hp_regen");
             line = replaceStat(line, "régén(\\.|ération)?( de base)? du mana|base mana regen", "ic_stat_mana_regen");
             line = replaceStat(line, "pénétration d'armure|armor penetration", "ic_stat_armor_pen");
             line = replaceStat(line, "pénétration magique|magic penetration", "ic_stat_magic_pen");
-            line = replaceStat(line, "efficacité de vos soins et boucliers|heal and shield power", "ic_stat_heal_shield");
+            line = replaceStat(line, "efficacité de vos soins et boucliers|heal and shield power",
+                    "ic_stat_heal_shield");
             line = replaceStat(line, "puissance des soins et boucliers", "ic_stat_heal_shield");
             line = replaceStat(line, "vol de vie|life steal", "ic_stat_lifesteal");
             line = replaceStat(line, "omnivampirisme|omnivamp", "ic_stat_vamp");
@@ -973,21 +1159,21 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             // Simple Stats
             line = replaceStat(line, "dégâts d'attaque|attack damage", "ic_stat_ad");
             line = replaceStat(line, "puissance|ability power", "ic_stat_ap");
-            line = replaceStat(line, "(?<!d')armure|\\barmor\\b", "ic_stat_armor"); 
+            line = replaceStat(line, "(?<!d')armure|\\barmor\\b", "ic_stat_armor");
             line = replaceStat(line, "résistance magique|magic resist", "ic_stat_mr");
-            
+
             // PV / Mana / Gold
             line = replaceStat(line, "(?<!des )\\bPV\\b|\\bHealth\\b", "ic_stat_health");
             line = replaceStat(line, "points de vie", "ic_stat_health");
             line = replaceStat(line, "(?<!du )\\bmana\\b", "ic_stat_mana");
             line = replaceStat(line, "\\bPO\\b", "ic_stat_gold");
-            
+
             sb.append(line);
             if (i < lines.length - 1) {
                 sb.append("<br>");
             }
         }
-             
+
         return sb.toString();
     }
 
@@ -1000,33 +1186,36 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     private String replaceStat(String text, String statRegex, String iconName) {
         // Regex Breakdown (Simplified for single line):
         // G1 (Existing Pre-Icon): (?:(<img[^>]+>)(?:\\s*<[^>]+>)*\\s*)?
-        // G2 (Number/Unit): Looks for standard pattern "Tags Number Tags Unit", BUT specifically excludes <img...> tags 
-        //                   to ensure they are caught by G1 (Pre-Icon) instead of being consumed here.
+        // G2 (Number/Unit): Looks for standard pattern "Tags Number Tags Unit", BUT
+        // specifically excludes <img...> tags
+        // to ensure they are caught by G1 (Pre-Icon) instead of being consumed here.
         // G3 (Stat Name): (STAT_REGEX)
         // G4 (Existing Post-Icon): (?:\s*(<img[^>]+>))?
-        
+
         String preIcon = "(?:(<img[^>]+>)(?:\\s*<[^>]+>)*\\s*)?";
         // Change: Added d' and des to regex to capture preposition properly
         String numberPart = "((?:<(?!img\\b)[^>]+>|\\s)*[-+]?\\s*\\d+(?:(?:%|\\s*%+)|(?:[.,]\\d+))?(?:<(?!img\\b)[^>]+>|\\s)*(?:d'|des\\s+|de\\s+)?)?";
         String postIcon = "(?:\\s*(<img[^>]+>))?";
-        
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile("(?i)" + preIcon + numberPart + "(" + statRegex + ")" + postIcon);
+
+        java.util.regex.Pattern p = java.util.regex.Pattern
+                .compile("(?i)" + preIcon + numberPart + "(" + statRegex + ")" + postIcon);
         java.util.regex.Matcher m = p.matcher(text);
-        
+
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             boolean hasPreIcon = m.group(1) != null;
             boolean hasPostIcon = m.group(4) != null;
-            
+
             String number = m.group(2) != null ? m.group(2) : "";
             String stat = m.group(3);
-            
+
             // Always ensure the icon is at the start (Left aligned)
             String iconTag = "<img src=\"" + iconName + "\"> ";
-            
+
             if (hasPreIcon) {
                 // If icon exists before, verify duplication logic.
-                // Simple logic: we are rewriting the block. If we found an icon, we can just rewrite it properly.
+                // Simple logic: we are rewriting the block. If we found an icon, we can just
+                // rewrite it properly.
                 // But to fix "Wrong Icon", we enforce OUR icon.
                 // Rebuild: Icon + Number + Stat
                 m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(iconTag + number + stat));
@@ -1042,7 +1231,6 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         return sb.toString();
     }
 
-
     // Custom Span for vertical alignment
     private static class CenteredImageSpan extends android.text.style.ImageSpan {
         public CenteredImageSpan(android.content.Context context, int drawableRes) {
@@ -1052,15 +1240,15 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         public CenteredImageSpan(android.graphics.drawable.Drawable d) {
             super(d);
         }
-        
+
         @Override
         public void draw(@androidx.annotation.NonNull android.graphics.Canvas canvas, CharSequence text,
-                         int start, int end, float x, 
-                         int top, int y, int bottom, @androidx.annotation.NonNull android.graphics.Paint paint) {
+                int start, int end, float x,
+                int top, int y, int bottom, @androidx.annotation.NonNull android.graphics.Paint paint) {
             android.graphics.drawable.Drawable b = getDrawable();
             android.graphics.Paint.FontMetricsInt fm = paint.getFontMetricsInt();
             int transY = (y + fm.descent + y + fm.ascent) / 2 - b.getBounds().bottom / 2;
-            
+
             canvas.save();
             canvas.translate(x, transY);
             b.draw(canvas);
@@ -1074,7 +1262,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private void showItemDetail(Item item) {
-        if (isFinishing()) return;
+        if (isFinishing())
+            return;
 
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_item_detail, null);
@@ -1082,7 +1271,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
         android.app.AlertDialog dialog = builder.create();
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
 
         // Bind Views
@@ -1103,7 +1293,8 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             tvCost.setText(android.text.Html.fromHtml(goldHtml, android.text.Html.FROM_HTML_MODE_LEGACY, source -> {
                 int resourceId = getResources().getIdentifier(source, "drawable", getPackageName());
                 if (resourceId != 0) {
-                    android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(this, resourceId);
+                    android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(this,
+                            resourceId);
                     if (d != null) {
                         d.setBounds(0, 0, 40, 40); // Slightly larger for UI
                         return d;
@@ -1132,21 +1323,23 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
         // Image
         if (item.getImage() != null) {
-            String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + item.getImage().getFull();
+            String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/"
+                    + item.getImage().getFull();
             com.bumptech.glide.Glide.with(this)
-                .load(imageUrl)
-                .placeholder(R.color.lol_blue_light)
-                .into(ivIcon);
+                    .load(imageUrl)
+                    .placeholder(R.color.lol_blue_light)
+                    .into(ivIcon);
         }
 
         // Description
         if (item.getDescription() != null) {
             String formattedDescription = formatDescription(item.getDescription());
-            
+
             android.text.Html.ImageGetter imageGetter = source -> {
                 int resourceId = getResources().getIdentifier(source, "drawable", getPackageName());
                 if (resourceId != 0) {
-                    android.graphics.drawable.Drawable drawable = androidx.core.content.ContextCompat.getDrawable(ItemsActivity.this, resourceId);
+                    android.graphics.drawable.Drawable drawable = androidx.core.content.ContextCompat
+                            .getDrawable(ItemsActivity.this, resourceId);
                     if (drawable != null) {
                         // Scale image to match text size roughly (e.g. 1.0x line height or fixed size)
                         int size = (int) (tvDescription.getTextSize() * 1.1);
@@ -1159,15 +1352,17 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
             android.text.Spanned spanned;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                spanned = android.text.Html.fromHtml(formattedDescription, android.text.Html.FROM_HTML_MODE_LEGACY, imageGetter, null);
+                spanned = android.text.Html.fromHtml(formattedDescription, android.text.Html.FROM_HTML_MODE_LEGACY,
+                        imageGetter, null);
             } else {
                 spanned = android.text.Html.fromHtml(formattedDescription, imageGetter, null);
             }
-            
+
             // Replace ImageSpans with CenteredImageSpans
             if (spanned instanceof android.text.SpannableStringBuilder) {
                 android.text.SpannableStringBuilder ssb = (android.text.SpannableStringBuilder) spanned;
-                android.text.style.ImageSpan[] imageSpans = ssb.getSpans(0, ssb.length(), android.text.style.ImageSpan.class);
+                android.text.style.ImageSpan[] imageSpans = ssb.getSpans(0, ssb.length(),
+                        android.text.style.ImageSpan.class);
                 for (android.text.style.ImageSpan span : imageSpans) {
                     int start = ssb.getSpanStart(span);
                     int end = ssb.getSpanEnd(span);
@@ -1185,5 +1380,38 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
         }
 
         dialog.show();
+    }
+
+    private void loadLocalItems() {
+        new Thread(() -> {
+            String json = FileUtils.readStringFromFile(this, "items.json");
+            if (json != null) {
+                ItemResponse response = new Gson().fromJson(json, ItemResponse.class);
+                if (response != null && response.getData() != null) {
+                    runOnUiThread(() -> {
+                        // Need to process items just like in fetchItems but without network call
+                        processItems(response.getData());
+
+                        // We still need secondary items for search aliases if not in main file
+                        // Checking if we should also save secondary items is a future optimization.
+                        // For now, let's keep secondary fetch on network or separate file if strictly
+                        // needed.
+                        // But wait... processItems -> fetchSecondaryItems call is NOT automatic.
+                        // In fetchItems, we call processItems THEN fetchSecondaryItems.
+
+                        binding.progressBarItems.setVisibility(View.GONE);
+
+                        // Trigger fetching secondary items (names/aliases)
+                        String apiLang = LocaleHelper.getApiLanguage(this);
+                        String secondaryLang = apiLang.equals("fr_FR") ? "en_US" : "fr_FR";
+                        fetchSecondaryItems(secondaryLang);
+                    });
+                } else {
+                    runOnUiThread(this::fetchItems);
+                }
+            } else {
+                runOnUiThread(this::fetchItems);
+            }
+        }).start();
     }
 }
