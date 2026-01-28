@@ -139,28 +139,46 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
     }
 
     private final Map<String, String> preferredCategoryImages = new HashMap<>();
+    private final Map<String, Integer> categoryDrawableImages = new HashMap<>();
+    
     private void setupPreferredImages() {
-        preferredCategoryImages.put(getString(R.string.cat_ad), "1036");           // Long Sword
-        preferredCategoryImages.put(getString(R.string.cat_ap), "3089");           // Rabadon's Deathcap
-        preferredCategoryImages.put(getString(R.string.cat_health), "1028");       // Ruby Crystal
-        preferredCategoryImages.put(getString(R.string.cat_armor_pen), "3035");    // Last Whisper
-        preferredCategoryImages.put(getString(R.string.cat_magic_pen), "4630");    // Blighting Jewel
-        preferredCategoryImages.put(getString(R.string.cat_life_steal), "3072");   // Bloodthirster
-        preferredCategoryImages.put(getString(R.string.cat_health_regen), "3083"); // Warmog's Armor
-        preferredCategoryImages.put(getString(R.string.cat_speed_no_boots), "3066"); // Winged Moonplate
-        preferredCategoryImages.put(getString(R.string.cat_tenacity), "3053");     // Sterak's Gage
-        preferredCategoryImages.put(getString(R.string.cat_active), "3157");       // Zhonya's Hourglass
-        preferredCategoryImages.put(getString(R.string.cat_aura), "3068");         // Sunfire Aegis
-        preferredCategoryImages.put(getString(R.string.cat_on_hit), "6672");       // Kraken Slayer
-        preferredCategoryImages.put(getString(R.string.cat_jungle), "1103");       // Mosstomper Seedling
-        preferredCategoryImages.put(getString(R.string.cat_omnivamp), "4633");     // Riftmaker
-        preferredCategoryImages.put(getString(R.string.cat_anti_heal), "3165");    // Morellonomicon
-        preferredCategoryImages.put(getString(R.string.cat_anti_shield), "6695");  // Serpent's Fang
-        preferredCategoryImages.put(getString(R.string.cat_lethality), "3134");    // Serrated Dirk
-        preferredCategoryImages.put(getString(R.string.cat_spellblade), "3057");   // Sheen
-        preferredCategoryImages.put(getString(R.string.cat_lifeline), "6673");     // Immortal Shieldbow
-        preferredCategoryImages.put(getString(R.string.cat_shield), "3190");       // Locket of the Iron Solari
-        preferredCategoryImages.put(getString(R.string.cat_support), "3869");      // Support Item
+        
+        // Drawable resources for categories
+        categoryDrawableImages.put(getString(R.string.cat_ad), R.drawable.ic_stat_ad);
+        categoryDrawableImages.put(getString(R.string.cat_ap), R.drawable.ic_stat_ap);
+        categoryDrawableImages.put(getString(R.string.cat_health), R.drawable.ic_stat_health);
+        categoryDrawableImages.put(getString(R.string.cat_armor_pen), R.drawable.ic_stat_armor_pen);
+        categoryDrawableImages.put(getString(R.string.cat_magic_pen), R.drawable.ic_stat_magic_pen);
+        categoryDrawableImages.put(getString(R.string.cat_life_steal), R.drawable.ic_stat_lifesteal);
+        categoryDrawableImages.put(getString(R.string.cat_health_regen), R.drawable.ic_stat_hp_regen);
+        categoryDrawableImages.put(getString(R.string.cat_speed_no_boots), R.drawable.ic_stat_move_speed);
+        categoryDrawableImages.put(getString(R.string.cat_tenacity), R.drawable.ic_stat_tenacity);
+        categoryDrawableImages.put(getString(R.string.cat_active), R.drawable.ic_stat_active);
+        categoryDrawableImages.put(getString(R.string.cat_aura), R.drawable.ic_stat_aura);
+        categoryDrawableImages.put(getString(R.string.cat_on_hit), R.drawable.ic_stat_on_hit);
+        categoryDrawableImages.put(getString(R.string.cat_jungle), R.drawable.role_jungle);
+        categoryDrawableImages.put(getString(R.string.cat_omnivamp), R.drawable.ic_stat_vamp);
+        categoryDrawableImages.put(getString(R.string.cat_anti_heal), R.drawable.ic_stat_anti_heal);
+        categoryDrawableImages.put(getString(R.string.cat_anti_shield), R.drawable.ic_stat_anti_shield);
+        categoryDrawableImages.put(getString(R.string.cat_lethality), R.drawable.ic_stat_armor_pen);
+        categoryDrawableImages.put(getString(R.string.cat_spellblade), R.drawable.ic_stat_spellblade);
+        categoryDrawableImages.put(getString(R.string.cat_lifeline), R.drawable.ic_stat_lifeline);
+        categoryDrawableImages.put(getString(R.string.cat_support), R.drawable.role_support);
+        categoryDrawableImages.put(getString(R.string.cat_boots), R.drawable.ic_stat_boots);
+        categoryDrawableImages.put(getString(R.string.cat_mana), R.drawable.ic_stat_mana);
+        categoryDrawableImages.put(getString(R.string.cat_mana_regen), R.drawable.ic_stat_mana_regen);
+        categoryDrawableImages.put(getString(R.string.cat_gold_per), R.drawable.ic_stat_gold);
+        categoryDrawableImages.put(getString(R.string.cat_ability_haste), R.drawable.ic_stat_haste);
+        categoryDrawableImages.put(getString(R.string.cat_armor), R.drawable.ic_stat_armor);
+        categoryDrawableImages.put(getString(R.string.cat_mr), R.drawable.ic_stat_mr);
+        categoryDrawableImages.put(getString(R.string.cat_as), R.drawable.ic_stat_attack_speed);
+        categoryDrawableImages.put(getString(R.string.cat_crit), R.drawable.ic_stat_crit);
+        categoryDrawableImages.put(getString(R.string.cat_vision), R.drawable.ic_stat_vision);
+        categoryDrawableImages.put(getString(R.string.cat_slow), R.drawable.ic_stat_slow);
+
+
+
+
     }
 
     private final Map<String, String> categoryDescriptions = new HashMap<>();
@@ -822,7 +840,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 originalDataChild = new HashMap<>(listDataChild);
 
                 // Set adapter
-                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion, representativeItems, category -> {
+                categoryAdapter = new CategoryAdapter(ItemsActivity.this, listDataHeader, listDataChild, currentVersion, representativeItems, categoryDrawableImages, category -> {
                      showOverlay(category);
                 });
                 
