@@ -1,43 +1,59 @@
-# Projet Développement Mobile - Lolop
+# 🏆 Lolop - Compagnon League of Legends
 
-## Idée de base
-**En rapport avec League of Legends : Aide et Infos**
+**Lolop** est une application Android native conçue pour aider les joueurs de League of Legends. Elle fournit des informations détaillées sur les champions, les objets et les notes de patch, tout en offrant des fonctionnalités pratiques comme la gestion des favoris et des mises à jour automatisées.
 
-L'objectif est de fournir des informations sur les personnages et les items, ainsi que des astuces en fonction des "matchups". À terme, l'application pourrait se connecter au compte League of Legends pour fournir des astuces en temps réel.
+## 📱 Fonctionnalités Principales
 
-## Fonctionnalités et Rapport de Version
+*   **Wiki Champions** :
+    *   Liste complète des champions avec recherche fluide et animée.
+    *   Détails approfondis : Statistiques, Histoire (Lore), Conseils (Ally/Enemy Tips), Sorts et Passifs.
+    *   Système de **Favoris** pour épingler et retrouver rapidement vos champions préférés.
+*   **Encyclopédie des Objets** :
+    *   Catalogue complet des items du jeu.
+    *   Filtrage par catégories et recherche textuelle.
+    *   Mise en cache locale pour un chargement instantané et une économie de données.
+*   **Notes de Patch** :
+    *   Consultation des dernières notes de mise à jour directement dans l'application (`PatchNoteActivity`).
+*   **Fonctionnalités Système** :
+    *   **Notifications** : Alertes pertinentes pour l'utilisateur.
+    *   **Mode Hors-ligne (Partiel)** : Consultation des données mises en cache sans connexion.
+    *   **Mises à jour en arrière-plan** : Utilisation de `WorkManager` pour garder les données à jour sans impacter l'expérience utilisateur.
 
-Ce tableau récapitule les fonctionnalités demandées et leur état d'implémentation actuel (v0.1) versus l'objectif final (v1.0).
+## 🛠️ Stack Technique
 
-| Fonctionnalités | v0.1 (Actuel) | v1.0 (Cible) |
-| :--- | :---: | :---: |
-| **Intégrer au moins 2 activités** | ❌ (1 Activité) | ✅ |
-| **Inclure le concept de « sharedPreferences »** | ❌ | ✅ |
-| **Intégrer un menu dans la barre des status** | ❌ (Ressource présente) | ✅ |
-| **Utiliser la notification** | ✅ | ✅ |
-| **Intégrer des fonctionnalités réseau (HTTP/Retrofit)** | ✅ | ✅ |
-| **Utiliser un composant du type « BroadcastReceiver »** | ✅ | ✅ |
-| **Exploiter l’écran tactile** | ✅ | ✅ |
-| **Inclure une Base de données embarquée « SQLite »** | ✅ (FavoriteDatabase) | ✅ |
-| **Utiliser les ressources pour le texte, les couleurs, etc.** | ✅ | ✅ |
-| **Internationaliser votre application** | ❌ | ✅ |
-| **S’adapter à l’orientation de l’écran** | ❌ | ✅ |
-| **Gérer la portabilité de votre écran** | ✅ | ✅ |
-| **Utiliser un « Bundle » pour la sauvegarde d’état** | ✅ | ✅ |
-| **Utiliser le concept de « Service »** | ❌ | ⏳ (Priorité basse) |
-| **Inclure des fragments** | ❌ | ⏳ (Priorité basse) |
-| **Utiliser la localisation** | ❌ | ⏳ (Priorité basse) |
-| **Utiliser un ou plusieurs capteurs (microphone)** | ❌ | ⏳ (Priorité basse) |
+L'application met en œuvre des concepts clés du développement Android :
 
-## Détails Techniques
+*   **Langage** : Java
+*   **Architecture** : MVVM (Model-View-ViewModel) avec Repository Pattern.
+*   **Interface Utilisateur (UI)** :
+    *   XML Layouts adaptatifs.
+    *   `Fragments` pour la navigation (ex: `NavbarFragment`).
+    *   Animations fluides pour la recherche et les transitions.
+*   **Réseau & Données** :
+    *   **Retrofit** : Consommation de l'API Riot Games / DataDragon.
+    *   **Glide / Picasso** : Chargement et mise en cache des images.
+    *   **JSON Parsing** : Gestion efficace des réponses API complexes.
+*   **Persistance & Système** :
+    *   **SQLite** : Base de données locale pour stocker les favoris (`FavoriteDatabase`).
+    *   **SharedPreferences** : Sauvegarde des préférences utilisateur.
+    *   **WorkManager** : Tâches de fond fiables (`PatchUpdateWorker`).
+    *   **BroadcastReceiver** : Écoute des événements système (`ManaReceiver`).
 
-### Architecture
--   **Langage** : Java
--   **Architecture** : MVVM (partiel) avec Repository pattern pour l'API.
+## 🚀 Installation
 
-### Composants Clés
--   **MainActivity** : Point d'entrée principal, gère l'affichage de la grille et la logique principale.
--   **ChampionAdapter** : Gère l'affichage de la liste des champions (RecyclerView).
--   **RetrofitClient** : Client HTTP pour communiquer avec l'API Riot/DataDragon.
--   **FavoriteDatabase** : Base de données locale pour stocker les champions favoris.
--   **ManaReceiver** : BroadcastReceiver écoutant l'état de la batterie (`BATTERY_LOW`) pour envoyer une notification utilisateur.
+1.  **Prérequis** :
+    *   Android Studio Ladybug ou version récente.
+    *   JDK 11 ou supérieur.
+    *   Appareil ou émulateur sous Android 8.0 (Oreo) / API Level 26 minimum.
+
+2.  **Configuration** :
+    *   Clonez ce dépôt.
+    *   Ouvrez le projet dans Android Studio.
+    *   Laissez Gradle synchroniser les dépendances.
+
+3.  **Exécution** :
+    *   Appuyez sur `Run` (Shift+F10) pour installer l'application sur votre appareil.
+
+## 🌍 Internationalisation
+
+L'application est conçue pour être multilingue. Elle détecte la langue du système et adapte le contenu (noms des items, descriptions, lore) en conséquence (support actuel : Français, Anglais).
