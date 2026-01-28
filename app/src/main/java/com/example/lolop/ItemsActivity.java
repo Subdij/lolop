@@ -580,7 +580,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
             // Temporary map to group items by tag
             HashMap<String, List<Item>> tempMap = new HashMap<>();
 
-            // DEBUG: count items that pass ALL filters (counted once)
+            // DEBUG: compte les items passant les filtres
             Set<String> passedFilterIds = new HashSet<>();
 
             // Pre-process: Sort by ID to prioritize standard items and Deduplicate by Name
@@ -604,17 +604,17 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
 
             Set<String> seenNames = new HashSet<>();
             
-            // Blacklisted IDs to remove
+            // IDs des items que l'on exclut
             Set<String> blacklistedIds = new HashSet<>(Arrays.asList(
                 "1082", "3070", "1056", "3865", "1055", "1083", "1054", "2031", "2003", "3363", "3364", "2138", "2139", "2140", "2055","2051","223184","3112","3177", "3184", "2141",
                 "3170", "3171", "3172", "3173", "3174", "3175"
             ));
-
+            // IDs des items autorisés même s'ils ont un attribut "into" -- Bottes
             Set<String> allowedWithInto = new HashSet<>(Arrays.asList(
                 "3111", "3020", "3158", "3006", "3047", "3009",
                 "3876", "3877", "3869", "3870", "3871"
             ));
-
+            // IDs des items support pour les enlever des autres catégories et les mettre dans une seule catégorie
             Set<String> supportItems = new HashSet<>(Arrays.asList(
                 "3876", "3877", "3869", "3870", "3871"
             ));
@@ -627,7 +627,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 if (seenNames.contains(item.getName())) continue;
                 seenNames.add(item.getName());
                 
-                // Exclude blacklisted IDs
+                // Enlève les items à exclure
                 if (item.getId() != null && blacklistedIds.contains(item.getId())) {
                     continue;
                 }
@@ -657,18 +657,17 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                     continue;
                 }
 
-                // ❌ Exclude items that have an "into" attribute
-                // We ONLY want items where "into" does NOT exist in the JSON
+                // Exclut les items avec l'attribut "into", car on ne veut que les items finaux
                 if (item.getInto() != null && !allowedWithInto.contains(item.getId())) {
                     continue;
                 }
 
-                // ✅ Item passed ALL filters → count it ONCE
+                // Si un item passe les filtres, on l'ajoute à la liste pour le debug
                 if (item.getId() != null) {
                     passedFilterIds.add(item.getId());
                 }
 
-                // Custom: Support Items Logic
+                // Logique Items Support 
                 if (item.getId() != null && supportItems.contains(item.getId())) {
                     addToMap(tempMap, getString(R.string.cat_support), item);
                     continue; 
@@ -803,6 +802,7 @@ public class ItemsActivity extends BaseActivity implements OverlayItemAdapter.On
                 }
             }
 
+            // DEBUG: affiche le nombre d'items (uniques) affichés
             android.util.Log.d(TAG,
                     "Items passing filters (map 11 + no 'into'): " + passedFilterIds.size()
             );
