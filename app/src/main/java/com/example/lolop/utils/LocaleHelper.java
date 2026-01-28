@@ -14,25 +14,33 @@ public class LocaleHelper {
     private static final String SELECTED_LANGUAGE = "Locale.Helper.Selected.Language";
 
     public static Context onAttach(Context context) {
-        String deviceLang = Locale.getDefault().getLanguage();
-        String defaultLang = "en"; // Default to English for all languages
-        if ("fr".equals(deviceLang)) {
-            defaultLang = "fr"; // Only use French if device is set to French
-        }
-        
-        String lang = getPersistedData(context, defaultLang);
-        return setLocale(context, lang);
+        String lang = getPersistedLocaleFallback(context);
+        return setLocale(context, lang, false);
     }
 
     public static Context onAttach(Context context, String defaultLanguage) {
         String lang = getPersistedData(context, defaultLanguage);
-        return setLocale(context, lang);
+        return setLocale(context, lang, false);
     }
 
     public static String getLanguage(Context context) {
-        return getPersistedData(context, Locale.getDefault().getLanguage());
+        return getPersistedLocaleFallback(context);
     }
-    
+
+    // Helper to get persisted or fallback
+    private static String getPersistedLocaleFallback(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences("lolop_prefs", Context.MODE_PRIVATE);
+        if (preferences.contains(SELECTED_LANGUAGE)) {
+            return preferences.getString(SELECTED_LANGUAGE, "en");
+        }
+        // Dynamic Fallback
+        String deviceLang = Locale.getDefault().getLanguage();
+        if ("fr".equals(deviceLang)) {
+            return "fr";
+        }
+        return "en";
+    }
+
     // Returns the API compliant language code (e.g., "fr_FR", "en_US")
     public static String getApiLanguage(Context context) {
         String lang = getLanguage(context);
@@ -44,7 +52,13 @@ public class LocaleHelper {
     }
 
     public static Context setLocale(Context context, String language) {
-        persist(context, language);
+        return setLocale(context, language, true);
+    }
+
+    private static Context setLocale(Context context, String language, boolean persist) {
+        if (persist) {
+            persist(context, language);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return updateResources(context, language);
         }

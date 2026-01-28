@@ -33,8 +33,9 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         void onCategoryClick(String category);
     }
 
-    public CategoryAdapter(Context context, List<String> categories, HashMap<String, List<Item>> categoryItems, 
-                           String currentVersion, Map<String, Item> representativeItems, Map<String, Integer> categoryDrawableImages, OnCategoryClickListener listener) {
+    public CategoryAdapter(Context context, List<String> categories, HashMap<String, List<Item>> categoryItems,
+            String currentVersion, Map<String, Item> representativeItems, Map<String, Integer> categoryDrawableImages,
+            OnCategoryClickListener listener) {
         this.context = context;
         this.categories = categories;
         this.categoryItems = categoryItems;
@@ -52,7 +53,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public int getItemViewType(int position) {
-        if ("Tout".equals(categories.get(position))) {
+        if (context.getString(R.string.category_all).equals(categories.get(position))) {
             return VIEW_TYPE_TOUT;
         }
         return VIEW_TYPE_CARD;
@@ -73,7 +74,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         String category = categories.get(position);
-        
+
         if (holder instanceof ToutViewHolder) {
             ((ToutViewHolder) holder).bind(category);
         } else if (holder instanceof CategoryViewHolder) {
@@ -95,14 +96,14 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             super(itemView);
             rvGrid = itemView.findViewById(R.id.rvToutGrid);
             tvHeader = itemView.findViewById(R.id.lblListHeader);
-            
+
             // Inner grid setup (5 columns to match requirement)
             rvGrid.setLayoutManager(new GridLayoutManager(context, 5));
         }
 
         void bind(String category) {
             tvHeader.setText(category);
-            
+
             List<Item> items = categoryItems.get(category);
             if (items != null) {
                 GridItemAdapter adapter = new GridItemAdapter(context, items, currentVersion);
@@ -122,7 +123,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             super(itemView);
             ivIcon = itemView.findViewById(R.id.ivCategoryIcon);
             tvName = itemView.findViewById(R.id.tvCategoryName);
-            
+
             itemView.setOnClickListener(v -> {
                 if (listener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
                     listener.onCategoryClick(categories.get(getAdapterPosition()));
@@ -138,35 +139,38 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 ivIcon.setImageResource(categoryDrawableImages.get(category));
             } else {
                 // Fallback to loading item image from API
-                // Use stable representative item if available, otherwise fallback to current list
+                // Use stable representative item if available, otherwise fallback to current
+                // list
                 Item representativeItem = representativeItems.get(category);
-                
-                // Fallback logic if map doesn't have it (should be covered by ItemsActivity logic)
+
+                // Fallback logic if map doesn't have it (should be covered by ItemsActivity
+                // logic)
                 if (representativeItem == null) {
-                     List<Item> items = categoryItems.get(category);
-                     if (items != null && !items.isEmpty()) {
-                         representativeItem = items.get(0);
-                     }
+                    List<Item> items = categoryItems.get(category);
+                    if (items != null && !items.isEmpty()) {
+                        representativeItem = items.get(0);
+                    }
                 }
 
                 if (representativeItem != null && representativeItem.getImage() != null) {
-                    String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + representativeItem.getImage().getFull();
-                    
+                    String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/"
+                            + representativeItem.getImage().getFull();
+
                     if (com.example.lolop.utils.PowerSavingManager.getInstance().isPowerSavingMode()) {
                         Glide.with(context)
-                             .load(imageUrl)
-                             .placeholder(R.color.lol_blue_light)
-                             .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
-                             .dontAnimate()
-                             .into(ivIcon);
+                                .load(imageUrl)
+                                .placeholder(R.color.lol_blue_light)
+                                .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                                .dontAnimate()
+                                .into(ivIcon);
                     } else {
                         Glide.with(context)
-                             .load(imageUrl)
-                             .placeholder(R.color.lol_blue_light)
-                             .into(ivIcon);
+                                .load(imageUrl)
+                                .placeholder(R.color.lol_blue_light)
+                                .into(ivIcon);
                     }
                 } else {
-                     ivIcon.setImageResource(R.mipmap.ic_launcher);
+                    ivIcon.setImageResource(R.mipmap.ic_launcher);
                 }
             }
         }

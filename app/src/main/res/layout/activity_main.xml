@@ -43,21 +43,40 @@
                     android:paddingTop="130dp"
                     android:paddingBottom="8dp">
 
-                    <EditText
-                        android:id="@+id/etSearch"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="24dp"
-                        android:layout_marginEnd="24dp"
-                        android:background="@drawable/search_bar_background"
-                        android:hint="@string/search_champion_hint"
-                        android:padding="12dp"
-                        android:textColor="@color/white"
-                        android:textColorHint="@color/lol_silver"
-                        android:textSize="14sp"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:imeOptions="actionDone" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp">
+
+                        <EditText
+                            android:id="@+id/etSearch"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/search_bar_background"
+                            android:hint="@string/search_champion_hint"
+                            android:padding="12dp"
+                            android:textColor="@color/white"
+                            android:textColorHint="@color/lol_silver"
+                            android:textSize="14sp"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:imeOptions="actionDone" />
+
+                        <ImageView
+                            android:id="@+id/ivMic"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_mic_inactive"
+                            android:background="@drawable/search_bar_background"
+                            android:clickable="true"
+                            android:focusable="true"/>
+                    </LinearLayout>
 
                     <HorizontalScrollView
                         android:id="@+id/roleFilterContainer"
@@ -206,15 +225,13 @@
         android:fadingEdgeLength="@dimen/fading_edge_length"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/bottomNavigation"
+        android:name="com.example.lolop.fragments.NavbarFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@drawable/bg_bottom_nav"
-        app:itemIconTint="@color/lol_gold"
-        app:itemTextColor="@color/lol_gold"
-        app:menu="@menu/bottom_nav_menu" />
+        tools:layout="@layout/fragment_navbar" />
 
     <ProgressBar
         android:id="@+id/progressBar"

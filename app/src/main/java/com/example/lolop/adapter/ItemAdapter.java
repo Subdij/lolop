@@ -21,7 +21,8 @@ public class ItemAdapter extends BaseExpandableListAdapter {
     private HashMap<String, List<Item>> listDataChild; // Child data in format of header title, child title
     private final String currentVersion;
 
-    public ItemAdapter(Context context, List<String> listDataHeader, HashMap<String, List<Item>> listChildData, String currentVersion) {
+    public ItemAdapter(Context context, List<String> listDataHeader, HashMap<String, List<Item>> listChildData,
+            String currentVersion) {
         this.context = context;
         this.listDataHeader = listDataHeader;
         this.listDataChild = listChildData;
@@ -41,15 +42,16 @@ public class ItemAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildrenCount(int groupPosition) {
-        if (listDataHeader == null || groupPosition >= listDataHeader.size()) return 0;
-        
+        if (listDataHeader == null || groupPosition >= listDataHeader.size())
+            return 0;
+
         String header = listDataHeader.get(groupPosition);
-        
-        // If "Tout", we only have 1 child (the grid container)
-        if ("Tout".equals(header)) {
+
+        // If "All/Tout", we only have 1 child (the grid container)
+        if (context.getString(R.string.category_all).equals(header)) {
             return 1;
         }
-        
+
         List<Item> items = this.listDataChild.get(header);
         return items != null ? items.size() : 0;
     }
@@ -83,7 +85,7 @@ public class ItemAdapter extends BaseExpandableListAdapter {
     public boolean hasStableIds() {
         return false;
     }
-    
+
     @Override
     public int getChildTypeCount() {
         return 2; // Normal Item and Grid Container
@@ -91,14 +93,15 @@ public class ItemAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildType(int groupPosition, int childPosition) {
-        return "Tout".equals(listDataHeader.get(groupPosition)) ? 1 : 0;
+        return context.getString(R.string.category_all).equals(listDataHeader.get(groupPosition)) ? 1 : 0;
     }
 
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         String headerTitle = (String) getGroup(groupPosition);
         if (convertView == null) {
-            LayoutInflater infalInflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater infalInflater = (LayoutInflater) this.context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = infalInflater.inflate(R.layout.item_list_group, parent, false);
         }
 
@@ -110,48 +113,52 @@ public class ItemAdapter extends BaseExpandableListAdapter {
     }
 
     @Override
-    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView,
+            ViewGroup parent) {
         int type = getChildType(groupPosition, childPosition);
-        
+
         if (type == 1) { // Grid Layout for "Tout"
             if (convertView == null) {
-                LayoutInflater infalInflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                LayoutInflater infalInflater = (LayoutInflater) this.context
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = infalInflater.inflate(R.layout.item_grid_container, parent, false);
             }
-            
+
             androidx.recyclerview.widget.RecyclerView rv = convertView.findViewById(R.id.rvItemGrid);
             // Setup Grid
             // Use AutoFit matches 5 columns
             rv.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(context, 5));
-            
-            List<Item> allItems = listDataChild.get("Tout");
+
+            List<Item> allItems = listDataChild.get(context.getString(R.string.category_all));
             if (allItems != null) {
                 GridItemAdapter gridAdapter = new GridItemAdapter(context, allItems, currentVersion);
                 rv.setAdapter(gridAdapter);
             }
-            
+
             return convertView;
-            
+
         } else { // Normal List Layout
             final Item item = (Item) getChild(groupPosition, childPosition);
-            
+
             if (convertView == null) {
-                LayoutInflater infalInflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                LayoutInflater infalInflater = (LayoutInflater) this.context
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = infalInflater.inflate(R.layout.item_list_item, parent, false);
             }
-            
+
             if (item != null) {
                 TextView txtListChild = convertView.findViewById(R.id.lblListItem);
                 ImageView imgListChild = convertView.findViewById(R.id.ivItemIcon);
-                
+
                 txtListChild.setText(item.getName());
-                
+
                 if (item.getImage() != null) {
-                    String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/" + item.getImage().getFull();
+                    String imageUrl = "https://ddragon.leagueoflegends.com/cdn/" + currentVersion + "/img/item/"
+                            + item.getImage().getFull();
                     Glide.with(context)
-                         .load(imageUrl)
-                         .placeholder(R.color.lol_blue_light)
-                         .into(imgListChild);
+                            .load(imageUrl)
+                            .placeholder(R.color.lol_blue_light)
+                            .into(imgListChild);
                 }
             }
 

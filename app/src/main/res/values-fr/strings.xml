@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">lolop</string>
+    <string name="app_name">LoLoP</string>
     <string name="search_item_hint">Rechercher des objets...</string>
     <string name="search_champion_hint">Rechercher des champions...</string>
     <string name="menu_champions">Champions</string>

@@ -28,16 +28,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/bottomNavigation"
+        android:name="com.example.lolop.fragments.NavbarFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_bottom_nav"
-        app:itemIconTint="@color/lol_gold"
-        app:itemTextColor="@color/lol_gold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu" />
+        tools:layout="@layout/fragment_navbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
